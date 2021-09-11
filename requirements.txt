@@ -1,0 +1,4 @@
+kivy
+pydub
+soundfile
+pedalboard

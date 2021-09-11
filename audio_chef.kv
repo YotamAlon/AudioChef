@@ -1,0 +1,23 @@
+<AudioChefWindow>:
+    orientation: 'vertical'
+    BoxLayout:
+        Label:
+            text: "Welcome to AudioChef.\nIn the future you'll be able to create recipes for me to cook"
+        Button:
+            text: "GO"
+            on_release: root.execute_recipe()
+    Label:
+        text: "The files you chose are:"
+    ScrollView:
+        BoxLayout:
+            id: file_box
+            size_hint_x: None
+    ScrollView:
+        BoxLayout:
+            id: transform_box
+            size_hint_x: None
+
+<SelectableButton>:
+    size: 120, 50
+    size_hint: None, None
+    background_color: 'grey'
