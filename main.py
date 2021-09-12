@@ -41,9 +41,10 @@ class AudioChefWindow(BoxLayout):
             self.ids.transform_box.add_widget(button)
 
     def on_dropfile(self, window, filename: bytes):
+        filename = filename.decode()
         if filename not in self.selected_files:
             self.selected_files.append(filename)
-            self.ids.file_box.add_widget(Label(text=filename.decode()))
+            self.ids.file_box.add_widget(Label(text=filename))
 
     def select_transformation(self, transform_button: SelectableButton):
         transform_button.select()
@@ -54,20 +55,27 @@ class AudioChefWindow(BoxLayout):
 
     def execute_recipe(self):
         for filename in self.selected_files:
-            name, ext = os.path.splitext(filename.decode())
-            output = name + '-output' + ext
-            audio, sample_rate = self.get_audio_data(name, ext)
-            board = Pedalboard([self.selected_transform()], sample_rate=sample_rate)
+            output_file_name, (audio, sample_rate) = self.get_audio_data(filename)
+            board = self.prepare_board(sample_rate)
             res = board(audio)
 
-            with soundfile.SoundFile(output, 'w', samplerate=sample_rate, channels=len(res.shape)) as f:
+            with soundfile.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=len(res.shape)) as f:
                 f.write(res)
 
-    def get_audio_data(self, name, ext):
+    def prepare_board(self, sample_rate):
+        return Pedalboard([self.selected_transform()], sample_rate=sample_rate)
+
+    def get_audio_data(self, filename):
+        name, ext = os.path.splitext(filename)
+
         if ext[1:].upper() not in soundfile.available_formats():
+            os.environ['PATH'] += ';' + os.path.join(os.getcwd(), 'windows', 'ffmpeg', 'bin')
             given_audio = pydub.AudioSegment.from_file(name + ext, format=ext[1:])
             given_audio.export(name + '.wav', format="wav")
-        return soundfile.read(name + ext.decode())
+            ext = '.wav'
+
+        output = name + '-output' + ext
+        return output, soundfile.read(name + ext)
 
 
 class AudioChefApp(App):
