@@ -1,39 +1,72 @@
+#:kivy 2.0.0
+
 <AudioChefWindow>:
     orientation: 'vertical'
     BoxLayout:
-        Label:
-            text: "Welcome to AudioChef.\nIn the future you'll be able to create recipes for me to cook"
         BoxLayout:
-            Button:
-                on_release: ext_dropdown.open(self)
-            DropDown:
-                id: ext_dropdown
+            orientation: 'vertical'
+            Label:
+                text: "Welcome to AudioChef.\nIn the future you'll be able to create recipes for me to cook"
+                text_size: self.width, None
+                size: self.texture_size
+            Label:
+                text: 'Messages:'
+                text_size: self.width, None
+                size: self.texture_size
+            Label:
+                id: messages_label
+                text_size: self.width, None
+                size: self.texture_size
+        BoxLayout:
+            orientation: 'vertical'
+            OptionsBox:
+                id: ext_box
             Button:
                 text: "GO"
                 on_release: root.execute_recipe()
-    Label:
-        text: "The files you chose are:"
+    BoxLayout:
+        Label:
+            text: "The files you chose are:"
+        ScrollView:
+            BoxLayout:
+                orientation: 'vertical'
+                id: file_box
+                size_hint_y: None
     ScrollView:
-        BoxLayout:
-            id: file_box
-            size_hint_x: None
-    ScrollView:
+        height: 50
+        size_hint_y: None
         BoxLayout:
             id: transform_box
             size_hint_x: None
     ScrollView:
+        height: 50
+        size_hint_y: None
         BoxLayout:
             id: args_box
+            size_hint_x: None
 
 <SelectableButton>:
-    size: 120, 50
-    size_hint: None, None
+    width: max(120, self.texture_size[0])
+    size_hint_x: None
     background_color: 'grey'
 
-<ArgumentBox>:
+
+<ValidatedInput>:
     Label:
         text: root.name
+        text_size: self.width, None
+        size: self.texture_size
     TextInput:
         id: text_input
         text: root.text
         on_text: root.text = self.text
+
+
+<ArgumentBox>:
+    width: 180
+    size_hint_x: None
+
+
+<FileLabel>:
+    text_size: self.width, None
+    size: self.texture_size
