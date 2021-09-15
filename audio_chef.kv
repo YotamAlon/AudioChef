@@ -21,8 +21,12 @@
             orientation: 'vertical'
             OptionsBox:
                 id: ext_box
+            OutputNameChanger:
+                id: name_changer
             Button:
                 text: "GO"
+                height: 50
+                size_hint_y: None
                 on_release: root.execute_recipe()
     BoxLayout:
         Label:
@@ -48,17 +52,57 @@
 <SelectableButton>:
     width: max(120, self.texture_size[0])
     size_hint_x: None
+
+<Button>:
     background_color: 'grey'
 
 
-<ValidatedInput>:
+<OutputNameChanger>:
+    cols: 2
     Label:
+        text: 'Choose file name change type:'
+    Label:
+    Label:
+        text: 'Suffix change'
+    CheckBox:
+        group: 'name_changer'
+        active: True
+        on_active: root.mode = 'suffix'
+    Label:
+        text: 'Replace text'
+    CheckBox:
+        group: 'name_changer'
+        on_active: root.mode = 'replace'
+    Label:
+        text: 'Regex (Advanced users)'
+    CheckBox:
+        group: 'name_changer'
+        on_active: root.mode = 'regex'
+    Label:
+        text: 'Replace this:'
+    Label:
+        text: 'With this:'
+    TextInput:
+        id: from_
+    TextInput:
+        id: to
+        text: '-output'
+
+
+<ValidatedInput>:
+    size_hint_y: None
+    height: input_label.height
+    Label:
+        id: input_label
         text: root.name
         text_size: self.width, None
-        size: self.texture_size
+        height: max(50, self.texture_size[1])
+        size_hint_y: None
     TextInput:
         id: text_input
         text: root.text
+        height: input_label.height
+        size_hint_y: None
         on_text: root.text = self.text
 
 

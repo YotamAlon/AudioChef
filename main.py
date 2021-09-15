@@ -1,4 +1,6 @@
 import os
+import re
+
 os.environ['PATH'] += ';' + os.path.join(os.getcwd(), 'windows', 'ffmpeg', 'bin')
 
 import kivy
@@ -14,6 +16,7 @@ from kivy.uix.button import Button
 from kivy.core.window import Window
 from kivy.uix.dropdown import DropDown
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from pedalboard import Pedalboard
 from transformations import TRASNFORMATIONS
@@ -71,6 +74,29 @@ class OptionsBox(ValidatedInput):
         return text.lower() in self.options
 
 
+class OutputNameChanger(GridLayout):
+    mode = StringProperty()
+
+    def change_name(self, old_name: str) -> str:
+        if self.mode == 'regex':
+            try:
+                regex = re.compile(self.ids.from_.text)
+            except Exception as e:
+                raise UnexecutableRecipeError(str(e))
+
+            def get_replacement(match):
+                replacement = self.ids.to.text
+                for i, group in enumerate(match.groups()):
+                    replacement = replacement.replace(f'${i + 1}', group)
+                return replacement
+
+            return regex.sub(get_replacement, old_name)
+        elif self.mode == 'replace':
+            return old_name.replace(self.ids.from_.text, self.ids.to.text)
+        else:
+            return old_name + self.ids.to.text
+
+
 class ArgumentBox(ValidatedInput):
     type = ObjectProperty()
 
@@ -121,48 +147,77 @@ class AudioChefWindow(BoxLayout):
         try:
             self.check_input_file_formats()
             self.check_output_file_formats()
+            self.check_selected_transformation()
             for filename in self.selected_files:
-                output_file_name, (audio, sample_rate) = self.get_audio_data(filename)
+                name, ext = os.path.splitext(filename)
+                outfile_name, outfile_ext = self.get_output_name(name), self.get_output_ext(ext)
+
+                audio, sample_rate = self.get_audio_data(name, ext)
+
                 board = self.prepare_board(sample_rate)
                 res = board(audio)
 
-                with soundfile.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=len(res.shape)) as f:
-                    f.write(res)
+                self.write_audio_data(outfile_name, outfile_ext, res, sample_rate)
         except UnexecutableRecipeError as e:
             self.add_message(str(e))
         except Exception:
             traceback.print_exc()
 
+    def write_audio_data(self, outfile_name, outfile_ext, res, sample_rate):
+        if outfile_ext[1:].upper() in soundfile.available_formats():
+            with soundfile.SoundFile(outfile_name + outfile_ext, 'w',
+                                     samplerate=sample_rate, channels=len(res.shape)) as f:
+                f.write(res)
+            return
+
+        with soundfile.SoundFile(outfile_name + '.wav', 'w',
+                                 samplerate=sample_rate, channels=len(res.shape)) as f:
+            f.write(res)
+
+        given_audio = pydub.AudioSegment.from_file(outfile_name + '.wav', format='wav')
+        given_audio.export(outfile_name + outfile_ext, format=outfile_ext[1:])
+
     def check_input_file_formats(self):
         for filename in self.selected_files:
             name, ext = os.path.splitext(filename)
-            if ext.lower() not in [format_.ext.lower() for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode]:
+            if ext.upper()[1:] in soundfile.available_formats():
+                return
+
+            if ext.lower()[1:] not in [format_.ext.lower() for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode]:
                 raise UnexecutableRecipeError(f'"{filename}" is not in a supported format')
 
     def check_output_file_formats(self):
         if not self.ids.ext_box.validated:
             raise UnexecutableRecipeError(f'"{self.ids.ext_box.text}" is not a supported output format')
 
+    def check_selected_transformation(self):
+        if self.selected_transform is None:
+            raise UnexecutableRecipeError('You must choose a transformation to apply')
+
     def prepare_board(self, sample_rate):
         kwargs = {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
         return Pedalboard([self.selected_transform(**kwargs)], sample_rate=sample_rate)
 
-    def get_audio_data(self, filename):
-        name, ext = os.path.splitext(filename)
-
+    def get_audio_data(self, name, ext):
         if ext[1:].upper() not in soundfile.available_formats():
             given_audio = pydub.AudioSegment.from_file(name + ext, format=ext[1:])
             given_audio.export(name + '.wav', format="wav")
             ext = '.wav'
 
-        output = name + '-output' + ext
-        return output, soundfile.read(name + ext)
+        return soundfile.read(name + ext)
 
     def clear_messages(self):
         self.ids.messages_label.text = ''
 
     def add_message(self, message):
         self.ids.messages_label.text += '\n' + message
+
+    def get_output_name(self, name):
+        path, filename = os.path.split(name)
+        return os.path.join(path, self.ids.name_changer.change_name(filename))
+
+    def get_output_ext(self, ext):
+        return '.' + self.ids.ext_box.text or ext
 
 
 class AudioChefApp(App):
