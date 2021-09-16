@@ -36,18 +36,42 @@
                 orientation: 'vertical'
                 id: file_box
                 size_hint_y: None
-    ScrollView:
+    BoxLayout:
         height: 50
         size_hint_y: None
-        BoxLayout:
-            id: transform_box
-            size_hint_x: None
+        cols: 2
+        Label:
+            text: "Added transformations:"
+        Button:
+            text: '+'
+            on_release: root.open_transformation_popup()
     ScrollView:
-        height: 50
-        size_hint_y: None
+        GridLayout:
+            cols: 2
+            id: transforms_box
+
+<TransformationPopup>:
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            height: 50
+            size_hint_y: None
+            BoxLayout:
+                id: transform_box
+                size_hint_x: None
+        ScrollView:
+            height: 50
+            size_hint_y: None
+            BoxLayout:
+                id: args_box
+                size_hint_x: None
         BoxLayout:
-            id: args_box
-            size_hint_x: None
+            Button:
+                text: 'Cancel'
+                on_release: root.dismiss()
+            Button:
+                text: 'Add'
+                on_release: root.confirm()
 
 <SelectableButton>:
     width: max(120, self.texture_size[0])

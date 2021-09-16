@@ -12,6 +12,7 @@ import traceback
 import soundfile
 from kivy.app import App
 from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.core.window import Window
 from kivy.uix.dropdown import DropDown
@@ -104,19 +105,48 @@ class ArgumentBox(ValidatedInput):
         self.type(text)
 
 
-class AudioChefWindow(BoxLayout):
-    transformations = TRASNFORMATIONS
+class TransformationPopup(Popup):
+    callback = ObjectProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        Window.bind(on_dropfile=self.on_dropfile)
         self.selected_transform = None
-        self.selected_files = []
 
-        for transform_name in self.transformations:
+        for transform_name in TRASNFORMATIONS:
             button = SelectableButton(text=transform_name)
             button.bind(on_release=self.select_transformation)
             self.ids.transform_box.add_widget(button)
+
+    def confirm(self):
+        if self.selected_transform is not None:
+            kwargs = {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
+            self.callback(*self.selected_transform, kwargs)
+
+        self.dismiss()
+
+    def select_transformation(self, transform_button: SelectableButton):
+        transform_button.select()
+        for button in self.ids.transform_box.children:
+            if button != transform_button:
+                button.unselect()
+
+        self.selected_transform = (transform_button.text, TRASNFORMATIONS[transform_button.text].trasform)
+        self.ids.args_box.clear_widgets()
+        for arg in TRASNFORMATIONS[transform_button.text].arguments:
+            if arg.options is not None:
+                pass
+            else:
+                self.ids.args_box.add_widget(ArgumentBox(
+                    type=arg.type, name=arg.name,
+                    text=str(arg.default) if arg.default is not None else arg.type()))
+
+
+class AudioChefWindow(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(on_dropfile=self.on_dropfile)
+        self.selected_transformations = []
+        self.selected_files = []
 
         self.ids.ext_box.name = 'Choose the output format (empty means the same as the input if supported)'
         self.ids.ext_box.options = [''] + [format_.ext.lower() for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_encode]
@@ -126,21 +156,6 @@ class AudioChefWindow(BoxLayout):
         if filename not in self.selected_files:
             self.selected_files.append(filename)
             self.ids.file_box.add_widget(Label(text=filename))
-
-    def select_transformation(self, transform_button: SelectableButton):
-        transform_button.select()
-        for button in self.ids.transform_box.children:
-            if button != transform_button:
-                button.unselect()
-        self.selected_transform = self.transformations[transform_button.text].trasform
-        self.ids.args_box.clear_widgets()
-        for arg in self.transformations[transform_button.text].arguments:
-            if arg.options is not None:
-                pass
-            else:
-                self.ids.args_box.add_widget(ArgumentBox(
-                    type=arg.type, name=arg.name,
-                    text=str(arg.default) if arg.default is not None else arg.type()))
 
     def execute_recipe(self):
         self.clear_messages()
@@ -195,8 +210,7 @@ class AudioChefWindow(BoxLayout):
             raise UnexecutableRecipeError('You must choose a transformation to apply')
 
     def prepare_board(self, sample_rate):
-        kwargs = {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
-        return Pedalboard([self.selected_transform(**kwargs)], sample_rate=sample_rate)
+        return Pedalboard(self.selected_transformations, sample_rate=sample_rate)
 
     def get_audio_data(self, name, ext):
         if ext[1:].upper() not in soundfile.available_formats():
@@ -218,6 +232,23 @@ class AudioChefWindow(BoxLayout):
 
     def get_output_ext(self, ext):
         return '.' + self.ids.ext_box.text or ext
+
+    def add_transformation(self, transform_name, transform, kwargs):
+        self.selected_transformations.append(transform(**kwargs))
+        transform_label = Label(text=f'{transform_name}({", ".join([f"{k}={v}" for k,v in kwargs.items()])})')
+        self.ids.transforms_box.add_widget(transform_label)
+        self.ids.transforms_box.add_widget(Button(
+            text='remove', on_release=
+            lambda button: self.remove_transformation(len(self.selected_transformations) - 1, transform_label, button)))
+
+    def remove_transformation(self, i, label, button):
+        self.selected_transformations.pop(i)
+        self.ids.transforms_box.remove_widget(label)
+        self.ids.transforms_box.remove_widget(button)
+
+    def open_transformation_popup(self):
+        TransformationPopup(title='Add a new tranformation to the recipe',
+                            callback=self.add_transformation, auto_dismiss=False).open()
 
 
 class AudioChefApp(App):
