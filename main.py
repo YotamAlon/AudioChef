@@ -1,6 +1,8 @@
 import os
 import re
 
+from kivy_helpers import toggle_widget
+
 os.environ['PATH'] += ';' + os.path.join(os.getcwd(), 'windows', 'ffmpeg', 'bin')
 
 import kivy
@@ -11,13 +13,12 @@ import asyncio
 import traceback
 import soundfile
 from kivy.app import App
+from datetime import datetime
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.core.window import Window
-from kivy.uix.dropdown import DropDown
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from pedalboard import Pedalboard
 from transformations import TRASNFORMATIONS
@@ -75,27 +76,30 @@ class OptionsBox(ValidatedInput):
         return text.lower() in self.options
 
 
-class OutputNameChanger(GridLayout):
+class OutputNameChanger(BoxLayout):
+    wildcards = ['$item', '$date']
     mode = StringProperty()
+    preview_callback = ObjectProperty()
 
     def change_name(self, old_name: str) -> str:
-        if self.mode == 'regex':
-            try:
-                regex = re.compile(self.ids.from_.text)
-            except Exception as e:
-                raise UnexecutableRecipeError(str(e))
-
-            def get_replacement(match):
-                replacement = self.ids.to.text
-                for i, group in enumerate(match.groups()):
-                    replacement = replacement.replace(f'${i + 1}', group)
-                return replacement
-
-            return regex.sub(get_replacement, old_name)
-        elif self.mode == 'replace':
-            return old_name.replace(self.ids.from_.text, self.ids.to.text)
+        if self.mode == 'wildcards':
+            new_name = self.ids.wildcards_input.text
+            new_name = new_name.replace('$item', old_name)
+            new_name = new_name.replace('$date', str(datetime.today()))
+            return new_name
         else:
-            return old_name + self.ids.to.text
+            if self.ids.replace_from_input.text == '':
+                return old_name
+            return old_name.replace(self.ids.replace_from_input.text, self.ids.replace_to_input.text)
+
+    def on_mode(self, instance, mode):
+        self.switch_widgets()
+        self.preview_callback()
+
+    def switch_widgets(self):
+        for widget_name in self.ids:
+            hide = not widget_name.startswith(self.mode)
+            toggle_widget(self.ids[widget_name], hide)
 
 
 class ArgumentBox(ValidatedInput):
@@ -147,6 +151,7 @@ class AudioChefWindow(BoxLayout):
         Window.bind(on_dropfile=self.on_dropfile)
         self.selected_transformations = []
         self.selected_files = []
+        self.file_widget_map = {}
 
         self.ids.ext_box.name = 'Choose the output format (empty means the same as the input if supported)'
         self.ids.ext_box.options = [''] + [format_.ext.lower() for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_encode]
@@ -155,7 +160,12 @@ class AudioChefWindow(BoxLayout):
         filename = filename.decode()
         if filename not in self.selected_files:
             self.selected_files.append(filename)
-            self.ids.file_box.add_widget(Label(text=filename))
+            file_label = Label(text=filename)
+            self.ids.file_box.add_widget(file_label)
+
+            preview_label = Label(text=self.get_output_filename(filename))
+            self.ids.file_box.add_widget(preview_label)
+            self.file_widget_map[filename] = (file_label, preview_label)
 
     def execute_recipe(self):
         self.clear_messages()
@@ -206,7 +216,7 @@ class AudioChefWindow(BoxLayout):
             raise UnexecutableRecipeError(f'"{self.ids.ext_box.text}" is not a supported output format')
 
     def check_selected_transformation(self):
-        if self.selected_transform is None:
+        if len(self.selected_transformations) == 0:
             raise UnexecutableRecipeError('You must choose a transformation to apply')
 
     def prepare_board(self, sample_rate):
@@ -226,12 +236,16 @@ class AudioChefWindow(BoxLayout):
     def add_message(self, message):
         self.ids.messages_label.text += '\n' + message
 
+    def get_output_filename(self, filename):
+        name, ext = os.path.splitext(filename)
+        return self.get_output_name(name) + self.get_output_ext(ext)
+
     def get_output_name(self, name):
         path, filename = os.path.split(name)
         return os.path.join(path, self.ids.name_changer.change_name(filename))
 
     def get_output_ext(self, ext):
-        return '.' + self.ids.ext_box.text or ext
+        return '.' + (self.ids.ext_box.text or ext[1:])
 
     def add_transformation(self, transform_name, transform, kwargs):
         self.selected_transformations.append(transform(**kwargs))
@@ -239,16 +253,20 @@ class AudioChefWindow(BoxLayout):
         self.ids.transforms_box.add_widget(transform_label)
         self.ids.transforms_box.add_widget(Button(
             text='remove', on_release=
-            lambda button: self.remove_transformation(len(self.selected_transformations) - 1, transform_label, button)))
+            lambda button: self.remove_transformation(self.selected_transformations[-1], transform_label, button)))
 
-    def remove_transformation(self, i, label, button):
-        self.selected_transformations.pop(i)
+    def remove_transformation(self, selected_transform, label, button):
+        self.selected_transformations.remove(selected_transform)
         self.ids.transforms_box.remove_widget(label)
         self.ids.transforms_box.remove_widget(button)
 
     def open_transformation_popup(self):
         TransformationPopup(title='Add a new tranformation to the recipe',
                             callback=self.add_transformation, auto_dismiss=False).open()
+
+    def filename_preview(self):
+        for filename in self.selected_files:
+            self.file_widget_map[filename][1].text = self.get_output_filename(filename)
 
 
 class AudioChefApp(App):
