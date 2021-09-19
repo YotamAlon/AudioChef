@@ -49,32 +49,36 @@
             text: '+'
             on_release: root.open_transformation_popup()
     ScrollView:
-        GridLayout:
-            cols: 2
+        Accordion:
             id: transforms_box
+            orientation: 'vertical'
 
 <TransformationPopup>:
     BoxLayout:
         orientation: 'vertical'
-        ScrollView:
-            height: 50
-            size_hint_y: None
-            BoxLayout:
-                id: transform_box
-                size_hint_x: None
-        ScrollView:
-            height: 50
-            size_hint_y: None
-            BoxLayout:
-                id: args_box
-                size_hint_x: None
+        TransformationForm:
+            id: tranform_form
+        Button:
+            text: 'Cancel'
+            on_release: root.dismiss()
+        Button:
+            text: 'Add'
+            on_release: root.confirm()
+
+<TransformationForm>:
+    orientation: 'vertical'
+    ScrollView:
+        height: 50
+        size_hint_y: None
         BoxLayout:
-            Button:
-                text: 'Cancel'
-                on_release: root.dismiss()
-            Button:
-                text: 'Add'
-                on_release: root.confirm()
+            id: transform_box
+            size_hint_x: None
+    ScrollView:
+        height: 50
+        size_hint_y: None
+        BoxLayout:
+            id: args_box
+            size_hint_x: None
 
 <SelectableButton>:
     width: max(120, self.texture_size[0])

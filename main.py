@@ -19,6 +19,8 @@ from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.accordion import AccordionItem
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from pedalboard import Pedalboard
 from transformations import TRASNFORMATIONS
@@ -109,24 +111,16 @@ class ArgumentBox(ValidatedInput):
         self.type(text)
 
 
-class TransformationPopup(Popup):
-    callback = ObjectProperty()
-
+class TransformationForm(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.selected_transform = None
 
+    def on_kv_post(self, base_widget):
         for transform_name in TRASNFORMATIONS:
             button = SelectableButton(text=transform_name)
             button.bind(on_release=self.select_transformation)
             self.ids.transform_box.add_widget(button)
-
-    def confirm(self):
-        if self.selected_transform is not None:
-            kwargs = {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
-            self.callback(*self.selected_transform, kwargs)
-
-        self.dismiss()
 
     def select_transformation(self, transform_button: SelectableButton):
         transform_button.select()
@@ -143,6 +137,20 @@ class TransformationPopup(Popup):
                 self.ids.args_box.add_widget(ArgumentBox(
                     type=arg.type, name=arg.name,
                     text=str(arg.default) if arg.default is not None else arg.type()))
+
+    def get_selected_tranform(self):
+        return self.selected_transform, {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
+
+
+class TransformationPopup(Popup):
+    callback = ObjectProperty()
+
+    def confirm(self):
+        selected_transform, kwargs = self.ids.tranform_form.get_selected_tranform()
+        if selected_transform is not None:
+            self.callback(*selected_transform, kwargs)
+
+        self.dismiss()
 
 
 class AudioChefWindow(BoxLayout):
@@ -249,16 +257,21 @@ class AudioChefWindow(BoxLayout):
 
     def add_transformation(self, transform_name, transform, kwargs):
         self.selected_transformations.append(transform(**kwargs))
-        transform_label = Label(text=f'{transform_name}({", ".join([f"{k}={v}" for k,v in kwargs.items()])})')
-        self.ids.transforms_box.add_widget(transform_label)
-        self.ids.transforms_box.add_widget(Button(
-            text='remove', on_release=
-            lambda button: self.remove_transformation(self.selected_transformations[-1], transform_label, button)))
+        self.add_tranform_item(transform_name, kwargs)
 
-    def remove_transformation(self, selected_transform, label, button):
+    def add_tranform_item(self, transform_name, kwargs):
+        accordion_grid = BoxLayout()
+        accordion_item = AccordionItem(title=f'{transform_name}({", ".join([f"{k}={v}" for k, v in kwargs.items()])})')
+        accordion_item.add_widget(accordion_grid)
+
+        accordion_grid.add_widget(Button(
+            text='remove', on_release=
+            lambda button: self.remove_transformation(self.selected_transformations[-1], accordion_item)))
+        self.ids.transforms_box.add_widget(accordion_item)
+
+    def remove_transformation(self, selected_transform, accordion_item):
         self.selected_transformations.remove(selected_transform)
-        self.ids.transforms_box.remove_widget(label)
-        self.ids.transforms_box.remove_widget(button)
+        self.ids.transforms_box.remove_widget(accordion_item)
 
     def open_transformation_popup(self):
         TransformationPopup(title='Add a new tranformation to the recipe',
