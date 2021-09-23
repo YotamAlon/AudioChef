@@ -3,82 +3,103 @@
 <AudioChefWindow>:
     orientation: 'vertical'
     BoxLayout:
-        BoxLayout:
-            orientation: 'vertical'
-            BoxLayout:
-                Label:
-                    text: "Welcome to AudioChef.\nIn the future you'll be able to create recipes for me to cook"
-                    text_size: self.width, None
-                    size: self.texture_size
-                Button:
-                    text: "GO"
-                    height: 50
-                    size_hint_y: None
-                    on_release: root.execute_recipe()
-            Label:
-                text: 'Messages:'
-                text_size: self.width, None
-                size: self.texture_size
-            Label:
-                id: messages_label
-                text_size: self.width, None
-                size: self.texture_size
-        BoxLayout:
-            orientation: 'vertical'
-            OptionsBox:
-                id: ext_box
-            OutputNameChanger:
-                id: name_changer
-                preview_callback: root.filename_preview
-    Label:
-        text: "The files you chose are:"
-        height: 30
-        size_hint_y: None
-    ScrollView:
-        GridLayout:
-            cols: 2
-            id: file_box
-            size_hint_y: None
-    BoxLayout:
-        height: 50
-        size_hint_y: None
-        cols: 2
-        Label:
-            text: "Added transformations:"
-        Button:
-            text: '+'
-            on_release: root.open_transformation_popup()
-    ScrollView:
-        Accordion:
-            id: transforms_box
-            orientation: 'vertical'
-
-<TransformationPopup>:
-    BoxLayout:
         orientation: 'vertical'
-        TransformationForm:
-            id: tranform_form
+        height: 175
+        size_hint_y: None
+        Label:
+            text: "Welcome to AudioChef.\nIn the future you'll be able to create recipes for me to cook"
+            height: 50
+            size_hint_y: None
+            text_size: self.width, None
+            size: self.texture_size
         Button:
-            text: 'Cancel'
-            on_release: root.dismiss()
-        Button:
-            text: 'Add'
-            on_release: root.confirm()
+            text: "GO"
+            height: 25
+            size_hint_y: None
+            on_release: root.execute_recipe()
+        Label:
+            text: 'Messages:'
+            height: 50
+            size_hint_y: None
+            text_size: self.width, None
+            size: self.texture_size
+        Label:
+            id: messages_label
+            height: 50
+            size_hint_y: None
+            text_size: self.width, None
+            size: self.texture_size
+    Accordion:
+        orientation: 'vertical'
+        AccordionItem:
+            title: 'File Name Changer'
+            BoxLayout:
+                orientation: 'vertical'
+                OptionsBox:
+                    id: ext_box
+                OutputNameChanger:
+                    id: name_changer
+                    preview_callback: root.filename_preview
+        AccordionItem:
+            title: 'Added files'
+            BoxLayout:
+                orientation: 'vertical'
+                Label:
+                    text: "The files you chose are:"
+                    height: 25
+                    size_hint_y: None
+                ScrollView:
+                    GridLayout:
+                        cols: 2
+                        id: file_box
+                        size_hint_y: None
+        AccordionItem:
+            title: 'Transformations'
+            BoxLayout:
+                orientation: 'vertical'
+                pos_hint: {'top': 1}
+                BoxLayout:
+                    height: 25
+                    size_hint_y: None
+                    Label:
+                        text: "Added transformations:"
+                    Button:
+                        text: '+'
+                        on_release: root.add_tranform_item()
+                BoxLayout:
+                    orientation: 'vertical'
+                    ScrollView:
+                        Accordion:
+                            id: transforms_box
+                            orientation: 'vertical'
+                            height: 75 + len(self.children) * 44
+                            size_hint_y: None
+
 
 <TransformationForm>:
-    orientation: 'vertical'
-    ScrollView:
-        height: 50
+
+    canvas.before:
+        Color:
+            rgb: (0, 0, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    BoxLayout:
+        orientation: 'vertical'
+        height: 75
         size_hint_y: None
-        BoxLayout:
-            id: transform_box
-            size_hint_x: None
-    ScrollView:
-        height: 50
-        size_hint_y: None
-        BoxLayout:
-            id: args_box
-            size_hint_x: None
+        pos_hint: {'top': 1}
+        ScrollView:
+            BoxLayout:
+                id: transform_box
+                size_hint_x: None
+        ScrollView:
+            BoxLayout:
+                id: args_box
+                size_hint_x: None
+        Button:
+            text: 'remove'
+            on_release: root.remove()
 
 <SelectableButton>:
     width: max(120, self.texture_size[0])
@@ -144,7 +165,6 @@
                 on_text: root.preview_callback()
 
 
-
 <ValidatedInput>:
     size_hint_y: None
     height: input_label.height
@@ -152,7 +172,7 @@
         id: input_label
         text: root.name
         text_size: self.width, None
-        height: max(50, self.texture_size[1])
+        height: max(25, self.texture_size[1])
         size_hint_y: None
     TextInput:
         id: text_input

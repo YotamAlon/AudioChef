@@ -111,7 +111,9 @@ class ArgumentBox(ValidatedInput):
         self.type(text)
 
 
-class TransformationForm(BoxLayout):
+class TransformationForm(AccordionItem):
+    remove_callback = ObjectProperty()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.selected_transform = None
@@ -136,21 +138,20 @@ class TransformationForm(BoxLayout):
             else:
                 self.ids.args_box.add_widget(ArgumentBox(
                     type=arg.type, name=arg.name,
-                    text=str(arg.default) if arg.default is not None else arg.type()))
+                    text=str(arg.default) if arg.default is not None else arg.type(),
+                    on_text=self.update_title
+                ))
+        self.update_title()
+
+    def update_title(self):
+        (transform_name, _), kwargs = self.get_selected_tranform()
+        self.title = f'{transform_name}({", ".join([f"{k}={v}" for k, v in kwargs.items()])})'
 
     def get_selected_tranform(self):
         return self.selected_transform, {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
 
-
-class TransformationPopup(Popup):
-    callback = ObjectProperty()
-
-    def confirm(self):
-        selected_transform, kwargs = self.ids.tranform_form.get_selected_tranform()
-        if selected_transform is not None:
-            self.callback(*selected_transform, kwargs)
-
-        self.dismiss()
+    def remove(self):
+        self.remove_callback(self)
 
 
 class AudioChefWindow(BoxLayout):
@@ -255,27 +256,12 @@ class AudioChefWindow(BoxLayout):
     def get_output_ext(self, ext):
         return '.' + (self.ids.ext_box.text or ext[1:])
 
-    def add_transformation(self, transform_name, transform, kwargs):
-        self.selected_transformations.append(transform(**kwargs))
-        self.add_tranform_item(transform_name, kwargs)
+    def add_tranform_item(self):
+        self.ids.transforms_box.add_widget(TransformationForm(title='Please select a transformation',
+                                                              remove_callback=self.remove_transformation))
 
-    def add_tranform_item(self, transform_name, kwargs):
-        accordion_grid = BoxLayout()
-        accordion_item = AccordionItem(title=f'{transform_name}({", ".join([f"{k}={v}" for k, v in kwargs.items()])})')
-        accordion_item.add_widget(accordion_grid)
-
-        accordion_grid.add_widget(Button(
-            text='remove', on_release=
-            lambda button: self.remove_transformation(self.selected_transformations[-1], accordion_item)))
-        self.ids.transforms_box.add_widget(accordion_item)
-
-    def remove_transformation(self, selected_transform, accordion_item):
-        self.selected_transformations.remove(selected_transform)
+    def remove_transformation(self, accordion_item):
         self.ids.transforms_box.remove_widget(accordion_item)
-
-    def open_transformation_popup(self):
-        TransformationPopup(title='Add a new tranformation to the recipe',
-                            callback=self.add_transformation, auto_dismiss=False).open()
 
     def filename_preview(self):
         for filename in self.selected_files:
