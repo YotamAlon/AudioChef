@@ -47,6 +47,7 @@ class ValidatedInput(BoxLayout):
     name = StringProperty()
     text = StringProperty()
     validated = BooleanProperty()
+    initial = StringProperty()
 
     def on_text(self, instance, pos):
         try:
@@ -111,7 +112,7 @@ class ArgumentBox(ValidatedInput):
         self.type(text)
 
 
-class TransformationForm(AccordionItem):
+class TransformationForm(BoxLayout):
     remove_callback = ObjectProperty()
 
     def __init__(self, **kwargs):
@@ -138,14 +139,13 @@ class TransformationForm(AccordionItem):
             else:
                 self.ids.args_box.add_widget(ArgumentBox(
                     type=arg.type, name=arg.name,
-                    text=str(arg.default) if arg.default is not None else arg.type(),
+                    initial=str(arg.default) if arg.default is not None else arg.type(),
                     on_text=self.update_title
                 ))
         self.update_title()
 
     def update_title(self):
         (transform_name, _), kwargs = self.get_selected_tranform()
-        self.title = f'{transform_name}({", ".join([f"{k}={v}" for k, v in kwargs.items()])})'
 
     def get_selected_tranform(self):
         return self.selected_transform, {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
@@ -257,8 +257,7 @@ class AudioChefWindow(BoxLayout):
         return '.' + (self.ids.ext_box.text or ext[1:])
 
     def add_tranform_item(self):
-        self.ids.transforms_box.add_widget(TransformationForm(title='Please select a transformation',
-                                                              remove_callback=self.remove_transformation))
+        self.ids.transforms_box.add_widget(TransformationForm(remove_callback=self.remove_transformation))
 
     def remove_transformation(self, accordion_item):
         self.ids.transforms_box.remove_widget(accordion_item)

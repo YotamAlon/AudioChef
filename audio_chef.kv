@@ -69,37 +69,29 @@
                 BoxLayout:
                     orientation: 'vertical'
                     ScrollView:
-                        Accordion:
+                        BoxLayout:
                             id: transforms_box
                             orientation: 'vertical'
-                            height: 75 + len(self.children) * 44
+                            height: 75 * len(self.children)
                             size_hint_y: None
 
 
 <TransformationForm>:
-
-    canvas.before:
-        Color:
-            rgb: (0, 0, 1)
-        Rectangle:
-            size: self.size
-            pos: self.pos
-    BoxLayout:
-        orientation: 'vertical'
-        height: 75
-        size_hint_y: None
-        pos_hint: {'top': 1}
-        ScrollView:
-            BoxLayout:
-                id: transform_box
-                size_hint_x: None
-        ScrollView:
-            BoxLayout:
-                id: args_box
-                size_hint_x: None
-        Button:
-            text: 'remove'
-            on_release: root.remove()
+    orientation: 'vertical'
+    height: 75
+    size_hint_y: None
+    pos_hint: {'top': 1}
+    ScrollView:
+        BoxLayout:
+            id: transform_box
+            size_hint_x: None
+    ScrollView:
+        BoxLayout:
+            id: args_box
+            size_hint_x: None
+    Button:
+        text: 'remove'
+        on_release: root.remove()
 
 <SelectableButton>:
     width: max(120, self.texture_size[0])
@@ -166,25 +158,29 @@
 
 
 <ValidatedInput>:
+    text: text_input.text
     size_hint_y: None
-    height: input_label.height
+    height: max(input_label.height, text_input.height)
     Label:
         id: input_label
         text: root.name
-        text_size: self.width, None
         height: max(25, self.texture_size[1])
-        size_hint_y: None
+        width: self.texture_size[0] + 10
+        size_hint: None, None
     TextInput:
         id: text_input
-        text: root.text
-        height: input_label.height
-        size_hint_y: None
-        on_text: root.text = self.text
+        text: root.initial
+        height: self.minimum_height
 
 
 <ArgumentBox>:
-    width: 180
+    width: 240
     size_hint_x: None
+    Slider:
+        min: 0
+        max: 100
+        value: root.text
+        step: 10
 
 
 <FileLabel>:
