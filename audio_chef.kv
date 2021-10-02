@@ -89,24 +89,26 @@
                                 BoxLayout:
                                     id: transforms_box
                                     orientation: 'vertical'
-                                    height: 75 * len(self.children)
+                                    height: 50 * len(self.children)
                                     size_hint_y: None
 
 
 <TransformationForm>:
-    orientation: 'vertical'
-    height: 75
+    height: 50
     size_hint_y: None
-    pos_hint: {'top': 1}
-    ScrollView:
-        BoxLayout:
-            id: transform_box
-            size_hint_x: None
+    Spinner:
+        width: 200
+        size_hint_x: None
+        text: 'Choose a tranformation:'
+        values: root.transformations
+        on_text: root.select_transformation(self.text)
     ScrollView:
         BoxLayout:
             id: args_box
             size_hint_x: None
     Button:
+        width: 100
+        size_hint_x: None
         text: 'remove'
         on_release: root.remove()
 

@@ -68,24 +68,13 @@ class OutputChanger(BoxLayout):
 
 class TransformationForm(BoxLayout):
     remove_callback = ObjectProperty()
+    transformations = TRASNFORMATIONS.keys()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.selected_transform = None
 
-    def on_kv_post(self, base_widget):
-        for transform_name in TRASNFORMATIONS:
-            button = SelectableButton(text=transform_name)
-            button.bind(on_release=self.select_transformation)
-            self.ids.transform_box.add_widget(button)
-
-    def select_transformation(self, transform_button: SelectableButton):
-        transform_button.select()
-        for button in self.ids.transform_box.children:
-            if button != transform_button:
-                button.unselect()
-
-        transform_name = transform_button.text
+    def select_transformation(self, transform_name):
         self.selected_transform = self.get_transform_name_and_object(transform_name)
         self.ids.args_box.clear_widgets()
         self.load_argument_boxes(TRASNFORMATIONS[self.selected_transform[0]])
