@@ -74,8 +74,7 @@ class PresetsFile:
     def save_preset(self, preset):
         presets_list = self.get_presets()
         presets_list.append(preset)
-        with open(self.filename, 'w') as f:
-            json.dump(presets_list, f)
+        self.set_presets(presets_list)
 
     def get_presets(self):
         if not os.path.exists(self.filename):
@@ -84,3 +83,21 @@ class PresetsFile:
 
         with open(self.filename, 'r') as f:
             return json.load(f)
+
+    def set_presets(self, presets):
+        with open(self.filename, 'w') as f:
+            json.dump(presets, f, indent=4)
+
+    def remove_preset(self, i):
+        presets = self.get_presets()
+        presets.pop(i)
+        self.set_presets(presets)
+
+
+class PresetButton(BoxLayout):
+    preset_id = ObjectProperty()
+    default = BooleanProperty()
+    text = StringProperty()
+    load_preset = ObjectProperty()
+    remove_preset = ObjectProperty()
+    make_default = ObjectProperty()

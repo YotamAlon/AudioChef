@@ -97,6 +97,7 @@
     height: 50
     size_hint_y: None
     Spinner:
+        id: spinner
         width: 200
         size_hint_x: None
         text: 'Choose a tranformation:'
@@ -118,6 +119,25 @@
 
 <Button>:
     background_color: 'grey'
+
+
+<PresetButton>:
+    height: 50
+    Button:
+        text: root.text
+        on_release: root.load_preset(root.preset_id)
+    Label:
+        text: 'Default:'
+    CheckBox:
+        group: 'default_preset'
+        active: root.default
+        on_active: root.make_default(root.preset_id, self.active)
+    Button:
+        width: 50
+        size_hint_x: None
+        text: '-'
+        on_release: root.remove_preset(root.preset_id)
+
 
 
 <OutputChanger>:

@@ -21,7 +21,7 @@ from kivy.properties import StringProperty, ObjectProperty
 from pedalboard import Pedalboard
 from transformations import TRASNFORMATIONS
 from audio_formats import SUPPORTED_AUDIO_FORMATS
-from helper_classes import UnexecutableRecipeError, SelectableButton, ArgumentBox, PresetsFile, OptionsBox
+from helper_classes import UnexecutableRecipeError, ArgumentBox, PresetsFile, OptionsBox, PresetButton
 
 logger = logging.getLogger('audiochef')
 logger.addHandler(logging.StreamHandler())
@@ -80,11 +80,6 @@ class TransformationForm(BoxLayout):
         self.load_argument_boxes(TRASNFORMATIONS[self.selected_transform[0]])
         self.update_title()
 
-    def select_button_for(self, transform_name):
-        for button in self.ids.transform_box.children:
-            if button.text == transform_name:
-                button.select()
-
     def get_transform_name_and_object(self, transform_name):
         return (transform_name, TRASNFORMATIONS[transform_name].trasform)
 
@@ -130,7 +125,7 @@ class TransformationForm(BoxLayout):
             return
 
         self.selected_transform = self.get_transform_name_and_object(state['transform_name'])
-        self.select_button_for(state['transform_name'])
+        self.ids.spinner.text = state['transform_name']
         self.load_argument_boxes(TRASNFORMATIONS[self.selected_transform[0]])
         self.load_args_dict(state['args'])
 
@@ -155,8 +150,18 @@ class AudioChefWindow(BoxLayout):
 
     def on_kv_post(self, base_widget):
         presets = self.presets_file.get_presets()
+        self.reload_presets(presets)
+        default_preset_id = next((i for i, preset in enumerate(presets) if preset.get('default', False)), None)
+        if default_preset_id:
+            self.load_preset(default_preset_id)
+
+    def reload_presets(self, presets):
+        self.presets_box.clear_widgets()
         for i, preset in enumerate(presets):
-            self.presets_box.add_widget(Button(text=f'{i}', on_release=lambda x: self.load_preset(i)))
+            self.presets_box.add_widget(PresetButton(preset_id=i, default=preset.get('default', False), text=f'{i}',
+                                                     load_preset=self.load_preset,
+                                                     remove_preset=self.remove_preset,
+                                                     make_default=self.make_preset_default))
 
     def on_dropfile(self, window, filename: bytes):
         filename = filename.decode()
@@ -209,6 +214,15 @@ class AudioChefWindow(BoxLayout):
             logger.debug(self.transforms_box.children)
             self.transforms_box.children[0].load_state(transform_state)
         self.name_changer.load_state(preset['name_changer'])
+
+    def remove_preset(self, i):
+        self.presets_file.remove_preset(i)
+        self.reload_presets(self.presets_file.get_presets())
+
+    def make_preset_default(self, i, val):
+        presets = self.presets_file.get_presets()
+        presets[i]['default'] = val
+        self.presets_file.set_presets(presets)
 
     def write_audio_data(self, outfile_name, outfile_ext, res, sample_rate):
         if outfile_ext[1:].upper() in soundfile.available_formats():
