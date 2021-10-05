@@ -123,20 +123,23 @@
 
 <PresetButton>:
     height: 50
+    TextInput:
+        text: root.preset_name
+        on_text: root.rename_preset(root.preset_name, self.text)
     Button:
-        text: root.text
-        on_release: root.load_preset(root.preset_id)
+        text: 'Load'
+        on_release: root.load_preset(root.preset_name)
     Label:
         text: 'Default:'
     CheckBox:
         group: 'default_preset'
         active: root.default
-        on_active: root.make_default(root.preset_id, self.active)
+        on_active: root.make_default(root.preset_name, self.active)
     Button:
         width: 50
         size_hint_x: None
         text: '-'
-        on_release: root.remove_preset(root.preset_id)
+        on_release: root.remove_preset(root.preset_name)
 
 
 

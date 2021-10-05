@@ -4,6 +4,7 @@ os.environ['PATH'] += ';' + os.path.join(os.getcwd(), 'windows', 'ffmpeg', 'bin'
 import kivy
 kivy.require('2.0.0')
 
+import uuid
 import pydub
 import asyncio
 import logging
@@ -139,29 +140,29 @@ class AudioChefWindow(BoxLayout):
 
     def __init__(self, **kwargs):
         self.presets_file = PresetsFile()
-        super().__init__(**kwargs)
-        Window.bind(on_dropfile=self.on_dropfile)
         self.selected_transformations = []
         self.selected_files = []
         self.file_widget_map = {}
+        super().__init__(**kwargs)
+        Window.bind(on_dropfile=self.on_dropfile)
 
+    def on_kv_post(self, base_widget):
         self.ext_box.name = 'Choose the output format (empty means the same as the input if supported)'
         self.ext_box.options = [''] + [format_.ext.lower() for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_encode]
 
-    def on_kv_post(self, base_widget):
         presets = self.presets_file.get_presets()
         self.reload_presets(presets)
-        default_preset_id = next((i for i, preset in enumerate(presets) if preset.get('default', False)), None)
-        if default_preset_id:
-            self.load_preset(default_preset_id)
+        default_preset_name = next((i for i, preset in enumerate(presets) if preset.get('default', False)), None)
+        if default_preset_name:
+            self.load_preset(default_preset_name)
 
     def reload_presets(self, presets):
         self.presets_box.clear_widgets()
-        for i, preset in enumerate(presets):
-            self.presets_box.add_widget(PresetButton(preset_id=i, default=preset.get('default', False), text=f'{i}',
-                                                     load_preset=self.load_preset,
-                                                     remove_preset=self.remove_preset,
-                                                     make_default=self.make_preset_default))
+        for preset in presets:
+            self.presets_box.add_widget(PresetButton(
+                preset_name=preset['name'], default=preset.get('default', False),
+                load_preset=self.load_preset, rename_preset=self.rename_preset, remove_preset=self.remove_preset,
+                make_default=self.make_preset_default))
 
     def on_dropfile(self, window, filename: bytes):
         filename = filename.decode()
@@ -198,15 +199,16 @@ class AudioChefWindow(BoxLayout):
             traceback.print_exc()
 
     def save_preset(self):
-        preset = {'ext': self.ext_box.text,
+        preset = {'name': str(uuid.uuid4()), 'ext': self.ext_box.text,
                   'transformations': [child.get_state() for child in self.transforms_box.children[::-1]],
                   'name_changer': self.name_changer.get_state()}
         self.presets_file.save_preset(preset)
 
-    def load_preset(self, i):
-        logger.debug(f'AudioChefWindow: loading preset {i}')
-        preset = self.presets_file.get_presets()[i]
-        logger.debug(f'AudioChefWindow: preset {i} - {preset}')
+    def load_preset(self, preset_name):
+        logger.debug(f'AudioChefWindow: loading preset {preset_name}')
+        preset = self.presets_file.get_preset(preset_name)
+        logger.debug(f'AudioChefWindow: preset {preset_name} - {preset}')
+        logger.debug(self.ext_box.options)
         self.ext_box.text = preset['ext']
         self.transforms_box.clear_widgets()
         for transform_state in preset['transformations']:
@@ -215,13 +217,19 @@ class AudioChefWindow(BoxLayout):
             self.transforms_box.children[0].load_state(transform_state)
         self.name_changer.load_state(preset['name_changer'])
 
-    def remove_preset(self, i):
-        self.presets_file.remove_preset(i)
+    def rename_preset(self, preset_name, new_name):
+        self.presets_file.rename_preset(preset_name, new_name)
         self.reload_presets(self.presets_file.get_presets())
 
-    def make_preset_default(self, i, val):
+    def remove_preset(self, preset_name):
+        self.presets_file.remove_preset(preset_name)
+        self.reload_presets(self.presets_file.get_presets())
+
+    def make_preset_default(self, preset_name, val):
         presets = self.presets_file.get_presets()
-        presets[i]['default'] = val
+        for preset in presets:
+            if preset['name'] == preset_name:
+                preset['default'] = val
         self.presets_file.set_presets(presets)
 
     def write_audio_data(self, outfile_name, outfile_ext, res, sample_rate):

@@ -73,6 +73,10 @@ class PresetsFile:
 
     def save_preset(self, preset):
         presets_list = self.get_presets()
+        if 'order' in preset:
+            preset['order'] = int(preset['order'])
+        else:
+            preset['order'] = len(presets_list)
         presets_list.append(preset)
         self.set_presets(presets_list)
 
@@ -84,20 +88,34 @@ class PresetsFile:
         with open(self.filename, 'r') as f:
             return json.load(f)
 
+    def get_preset(self, name):
+        presets = self.get_presets()
+        return next((preset for preset in presets if preset['name'] == name), None)
+
     def set_presets(self, presets):
         with open(self.filename, 'w') as f:
             json.dump(presets, f, indent=4)
 
-    def remove_preset(self, i):
+    def remove_preset(self, name):
         presets = self.get_presets()
-        presets.pop(i)
+        preset = next((preset for preset in presets if preset['name'] == name), None)
+        presets.remove(preset)
+        self.set_presets(presets)
+
+    def rename_preset(self, name, new_name):
+        presets = self.get_presets()
+        for preset in presets:
+            if preset['name'] == name:
+                preset['name'] = new_name
+                break
+
         self.set_presets(presets)
 
 
 class PresetButton(BoxLayout):
-    preset_id = ObjectProperty()
+    preset_name = ObjectProperty()
     default = BooleanProperty()
-    text = StringProperty()
     load_preset = ObjectProperty()
+    rename_preset = ObjectProperty()
     remove_preset = ObjectProperty()
     make_default = ObjectProperty()
