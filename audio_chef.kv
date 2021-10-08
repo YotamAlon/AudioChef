@@ -219,12 +219,12 @@
 <ArgumentBox>:
     width: 240
     size_hint_x: None
-    text: str(slider.value)
     Slider:
         id: slider
         min: 0
         max: 100
-        value: root.text
+        value: root.text if root.text.replace('.', '', 1).isdigit() else self.min
+        on_touch_move: root.text = str(self.value)
         step: 10
 
 
