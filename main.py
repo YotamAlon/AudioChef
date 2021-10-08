@@ -5,11 +5,9 @@ import kivy
 kivy.require('2.0.0')
 
 import uuid
-import pydub
 import asyncio
 import logging
 import traceback
-import soundfile
 from kivy.app import App
 from datetime import datetime
 from kivy.uix.label import Label
@@ -21,7 +19,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty, ObjectProperty
 from pedalboard import Pedalboard
 from transformations import TRASNFORMATIONS
-from audio_formats import SUPPORTED_AUDIO_FORMATS
+from audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
 from helper_classes import UnexecutableRecipeError, ArgumentBox, PresetsFile, OptionsBox, PresetButton
 
 logger = logging.getLogger('audiochef')
@@ -166,14 +164,15 @@ class AudioChefWindow(BoxLayout):
 
     def on_dropfile(self, window, filename: bytes):
         filename = filename.decode()
-        if filename not in self.selected_files:
-            self.selected_files.append(filename)
-            file_label = Label(text=filename)
+        audio_file = AudioFile(filename)
+        if audio_file not in self.selected_files:
+            self.selected_files.append(audio_file)
+            file_label = Label(text=audio_file.filename)
             self.file_box.add_widget(file_label)
 
-            preview_label = Label(text=self.get_output_filename(filename))
+            preview_label = Label(text=self.get_output_filename(audio_file.filename))
             self.file_box.add_widget(preview_label)
-            self.file_widget_map[filename] = (file_label, preview_label)
+            self.file_widget_map[audio_file.filename] = (file_label, preview_label)
 
     def execute_preset(self):
         self.clear_messages()
@@ -183,16 +182,16 @@ class AudioChefWindow(BoxLayout):
 
             transformations = self.get_transformations()
             self.check_selected_transformation(transformations)
-            for filename in self.selected_files:
-                name, ext = os.path.splitext(filename)
-                outfile_name, outfile_ext = self.get_output_name(name), self.get_output_ext(ext)
+            for audio_file in self.selected_files:
+                outfile_name = self.get_output_name(audio_file.source_name)
+                outfile_ext = self.get_output_ext(audio_file.source_ext)
 
-                audio, sample_rate = self.get_audio_data(name, ext)
+                audio, sample_rate = audio_file.get_audio_data()
 
                 board = self.prepare_board(sample_rate, transformations)
                 res = board(audio)
 
-                self.write_audio_data(outfile_name, outfile_ext, res, sample_rate)
+                audio_file.write_audio_data(outfile_name, outfile_ext, res, sample_rate)
         except UnexecutableRecipeError as e:
             self.add_message(str(e))
         except Exception:
@@ -232,25 +231,9 @@ class AudioChefWindow(BoxLayout):
                 preset['default'] = val
         self.presets_file.set_presets(presets)
 
-    def write_audio_data(self, outfile_name, outfile_ext, res, sample_rate):
-        if outfile_ext[1:].upper() in soundfile.available_formats():
-            with soundfile.SoundFile(outfile_name + outfile_ext, 'w',
-                                     samplerate=sample_rate, channels=len(res.shape)) as f:
-                f.write(res)
-            return
-
-        with soundfile.SoundFile(outfile_name + '.wav', 'w',
-                                 samplerate=sample_rate, channels=len(res.shape)) as f:
-            f.write(res)
-
-        given_audio = pydub.AudioSegment.from_file(outfile_name + '.wav', format='wav')
-        given_audio.export(outfile_name + outfile_ext, format=outfile_ext[1:])
-
     def check_input_file_formats(self):
         for filename in self.selected_files:
             name, ext = os.path.splitext(filename)
-            if ext.upper()[1:] in soundfile.available_formats():
-                return
 
             if ext.lower()[1:] not in [format_.ext.lower() for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode]:
                 raise UnexecutableRecipeError(f'"{filename}" is not in a supported format')
@@ -268,14 +251,6 @@ class AudioChefWindow(BoxLayout):
 
     def prepare_board(self, sample_rate, transformations):
         return Pedalboard([transform(**kwargs) for (_, transform), kwargs in transformations], sample_rate=sample_rate)
-
-    def get_audio_data(self, name, ext):
-        if ext[1:].upper() not in soundfile.available_formats():
-            given_audio = pydub.AudioSegment.from_file(name + ext, format=ext[1:])
-            given_audio.export(name + '.wav', format="wav")
-            ext = '.wav'
-
-        return soundfile.read(name + ext)
 
     def clear_messages(self):
         self.ids.messages_label.text = ''
@@ -301,8 +276,8 @@ class AudioChefWindow(BoxLayout):
         self.transforms_box.remove_widget(accordion_item)
 
     def filename_preview(self):
-        for filename in self.selected_files:
-            self.file_widget_map[filename][1].text = self.get_output_filename(filename)
+        for audio_file in self.selected_files:
+            self.file_widget_map[audio_file.filename][1].text = self.get_output_filename(audio_file.filename)
 
 
 class AudioChefApp(App):

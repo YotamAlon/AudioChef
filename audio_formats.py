@@ -1,18 +1,96 @@
+import os
+import pydub
+import soundfile
 import subprocess
 
+output = subprocess.check_output(['ffmpeg', '-formats']).decode()
+lines = output.split('\r\n')
 
-output = subprocess.check_output(['ffmpeg', '-formats'])
-lines = output.split(b'\r\n')
-opt_formats = [line.split() for line in lines[lines.index(b' --') + 1:-1]]
+ffmpeg_formats = {}
+for line in lines[lines.index(' --') + 1:-1]:
+    encode_decode, exts, description = line.strip().split(maxsplit=2)
+    for ext in exts.split(','):
+        if ext in ffmpeg_formats:
+            ffmpeg_formats[ext]['can_decode'] |= 'D' in encode_decode
+            ffmpeg_formats[ext]['can_encode'] |= 'E' in encode_decode
+            ffmpeg_formats[ext]['description'] += '|' + description
+        else:
+            ffmpeg_formats[ext] = {'can_decode': 'D' in encode_decode, 'can_encode': 'E' in encode_decode,
+                                   'description': description}
 
 
-class AudioFormat:
-    def __init__(self, support, ext, *description):
-        self.can_encode = 'E' in support.decode()
-        self.can_decode = 'D' in support.decode()
-        self.ext = ext.decode()
-        self.description = ' '.join(map(bytes.decode, description))
+class AudioFormatter:
+    def __init__(self, can_encode, can_decode, ext, description):
+        self.can_encode = can_encode
+        self.can_decode = can_decode
+        self.ext = ext
+        self.description = description
+
+    def decode(self, input_file, output_file):
+        raise NotImplementedError()
+
+    def encode(self, input_file, output_file):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return f'AudioFormat ({self.ext}) [{"D" if self.can_decode else ""}{"E" if self.can_encode else ""}]'
 
 
-SUPPORTED_AUDIO_FORMATS = [AudioFormat(opt_format[0], opt_format[1], *opt_format[2:])
-                           for opt_format in opt_formats]
+class FFMPEGAudioFormatter(AudioFormatter):
+    def decode(self, input_file, output_file):
+        given_audio = pydub.AudioSegment.from_file(input_file, format=self.ext)
+        given_audio.export(output_file, format="wav")
+
+    def encode(self, input_file, output_file):
+        given_audio = pydub.AudioSegment.from_file(input_file, format='wav')
+        given_audio.export(output_file, format=self.ext)
+
+
+SUPPORTED_AUDIO_FORMATS = [FFMPEGAudioFormatter(**{'ext': ext, **ext_details})
+                           for ext, ext_details in ffmpeg_formats.items()]
+
+# m4a is just mp4 that doesn't have video, so use mp4 formatter encoding as a workaround to support m4a fully
+m4a_formatter = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == 'm4a'))
+if m4a_formatter.can_encode:
+    print('It appears ffmpeg now supports m4a encoding out-of-the-box. You can remove this code')
+else:
+    mp4_formatter = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == 'mp4'))
+    m4a_formatter.can_encode = True
+    m4a_formatter.encode = mp4_formatter.encode
+
+
+class AudioFile:
+    def __init__(self, filename):
+        self.filename = filename
+        name, ext = os.path.splitext(filename)
+        self.source_name = name
+        self.source_ext = ext.strip('.')
+        self.source_audio_format = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == ext), None)
+        self.internal_file = None
+
+    def __eq__(self, other):
+        if not isinstance(other, AudioFile):
+            raise TypeError('second argument is not of type AudioFile')
+
+        return self.filename == other.filename
+
+    def get_audio_data(self):
+        if self.internal_file is None:
+            self.create_internal_file()
+        return soundfile.read(self.internal_file)
+
+    def get_internal_file_path(self, name):
+        return os.path.join(os.getcwd(), 'internal', name + '.wav')
+
+    def create_internal_file(self):
+        _, name = os.path.split(self.source_name)
+        self.internal_file = self.get_internal_file_path(name)
+
+        self.source_audio_format.decode(self.source_name + self.source_ext, self.internal_file)
+
+    def write_output_file(self, output_name, output_ext, data, sample_rate):
+        with soundfile.SoundFile(output_name + '.wav', 'w', samplerate=sample_rate, channels=len(data.shape)) as f:
+            f.write(data)
+
+        output_format = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == output_ext.strip('.')), None)
+        output_format.encode(output_name + '.wav', output_name + output_ext)
