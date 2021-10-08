@@ -260,6 +260,8 @@ class AudioChefWindow(BoxLayout):
 
     def get_output_filename(self, filename):
         name, ext = os.path.splitext(filename)
+        if ext not in [format_.ext for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode]:
+            return "This file format is not supported"
         return self.get_output_name(name) + self.get_output_ext(ext)
 
     def get_output_name(self, name):
