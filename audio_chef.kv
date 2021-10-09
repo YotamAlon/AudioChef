@@ -33,12 +33,12 @@
     orientation: 'vertical'
     name_changer: name_changer
     name_locked: bool(name_item.locked)
-    ext_box: ext_box
+    ext_box: ext_item.ids.ext_box
     ext_locked: bool(ext_item.locked)
     transforms_box: transforms_box
     transforms_locked: bool(transforms_item.locked)
     presets_box: presets_box
-    file_box: file_box
+    file_box: file_item.ids.file_box
     BoxLayout:
         orientation: 'vertical'
         height: 175
@@ -80,13 +80,9 @@
             title: 'Current preset'
             Accordion:
                 orientation: 'vertical'
-                AccordionItem:
+                ExtAccordionItem:
                     id: ext_item
-                    title: 'Output Format'
                     locked: bool(root.ext_locked)
-                    title_template: 'PresetAccordionItemTitle'
-                    OptionsBox:
-                        id: ext_box
                 AccordionItem:
                     id: name_item
                     title: 'File Name Changer'
@@ -95,19 +91,8 @@
                     OutputChanger:
                         id: name_changer
                         preview_callback: root.filename_preview
-                AccordionItem:
-                    title: 'Added files'
-                    BoxLayout:
-                        orientation: 'vertical'
-                        Label:
-                            text: "The files you chose are:"
-                            height: 25
-                            size_hint_y: None
-                        ScrollView:
-                            GridLayout:
-                                cols: 2
-                                id: file_box
-                                size_hint_y: None
+                FilesAccordionItem:
+                    id: file_item
                 AccordionItem:
                     id: transforms_item
                     title: 'Transformations'
@@ -132,6 +117,28 @@
                                     orientation: 'vertical'
                                     height: 50 * len(self.children)
                                     size_hint_y: None
+
+
+<ExtAccordionItem@AccordionItem>:
+    title: 'Output Format'
+    title_template: 'PresetAccordionItemTitle'
+    OptionsBox:
+        id: ext_box
+
+
+<FilesAccordionItem@AccordionItem>:
+    title: 'Added files'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: "The files you chose are:"
+            height: 25
+            size_hint_y: None
+        ScrollView:
+            GridLayout:
+                cols: 2
+                id: file_box
+                size_hint_y: None
 
 
 <TransformationForm>:
