@@ -16,7 +16,7 @@ from kivy.uix.widget import Widget
 from kivy.core.window import Window
 from kivy_helpers import toggle_widget
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, ObjectProperty
+from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from pedalboard import Pedalboard
 from transformations import TRASNFORMATIONS
 from audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
@@ -131,8 +131,11 @@ class TransformationForm(BoxLayout):
 
 class AudioChefWindow(BoxLayout):
     name_changer: OutputChanger = ObjectProperty()
+    name_locked = BooleanProperty()
     ext_box: OptionsBox = ObjectProperty()
+    ext_locked = BooleanProperty()
     transforms_box: Widget = ObjectProperty()
+    transforms_locked: BooleanProperty()
     presets_box: Widget = ObjectProperty()
     file_box: Widget = ObjectProperty()
 
@@ -208,13 +211,18 @@ class AudioChefWindow(BoxLayout):
         preset = self.presets_file.get_preset(preset_name)
         logger.debug(f'AudioChefWindow: preset {preset_name} - {preset}')
         logger.debug(self.ext_box.options)
-        self.ext_box.text = preset['ext']
-        self.transforms_box.clear_widgets()
-        for transform_state in preset['transformations']:
-            self.add_tranform_item()
-            logger.debug(self.transforms_box.children)
-            self.transforms_box.children[0].load_state(transform_state)
-        self.name_changer.load_state(preset['name_changer'])
+        if not self.ext_locked:
+            self.ext_box.text = preset['ext']
+
+        if not self.transforms_locked:
+            self.transforms_box.clear_widgets()
+            for transform_state in preset['transformations']:
+                self.add_tranform_item()
+                logger.debug(self.transforms_box.children)
+                self.transforms_box.children[0].load_state(transform_state)
+
+        if not self.name_locked:
+            self.name_changer.load_state(preset['name_changer'])
 
     def rename_preset(self, preset_name, new_name):
         self.presets_file.rename_preset(preset_name, new_name)

@@ -1,10 +1,42 @@
 #:kivy 2.0.0
 
+[PresetAccordionItemTitle@BoxLayout]:
+    canvas.before:
+        Color:
+            rgb: 1, 1, 1
+        BorderImage:
+            source: ctx.item.background_normal if ctx.item.collapse else ctx.item.background_selected
+            pos: self.pos
+            size: self.size
+        PushMatrix
+        Translate:
+            xy: self.center_x, self.center_y
+        Rotate:
+            angle: 90 if ctx.item.orientation == 'horizontal' else 0
+            axis: 0, 0, 1
+        Translate:
+            xy: -self.center_x, -self.center_y
+    canvas.after:
+        PopMatrix
+    BoxLayout:
+        Label:
+            text: ctx.title
+        SelectableButton:
+            text: 'Lock'
+            on_release:
+                root.parent.parent.parent.locked = not root.parent.parent.parent.locked
+                self.select() if root.parent.parent.parent.locked else self.unselect()
+                self.text = 'Locked' if root.parent.parent.parent.locked else 'Lock'
+
+
 <AudioChefWindow>:
     orientation: 'vertical'
     name_changer: name_changer
+    name_locked: bool(name_item.locked)
     ext_box: ext_box
+    ext_locked: bool(ext_item.locked)
     transforms_box: transforms_box
+    transforms_locked: bool(transforms_item.locked)
     presets_box: presets_box
     file_box: file_box
     BoxLayout:
@@ -49,14 +81,20 @@
             Accordion:
                 orientation: 'vertical'
                 AccordionItem:
+                    id: ext_item
+                    title: 'Output Format'
+                    locked: bool(root.ext_locked)
+                    title_template: 'PresetAccordionItemTitle'
+                    OptionsBox:
+                        id: ext_box
+                AccordionItem:
+                    id: name_item
                     title: 'File Name Changer'
-                    BoxLayout:
-                        orientation: 'vertical'
-                        OptionsBox:
-                            id: ext_box
-                        OutputChanger:
-                            id: name_changer
-                            preview_callback: root.filename_preview
+                    locked: bool(root.name_locked)
+                    title_template: 'PresetAccordionItemTitle'
+                    OutputChanger:
+                        id: name_changer
+                        preview_callback: root.filename_preview
                 AccordionItem:
                     title: 'Added files'
                     BoxLayout:
@@ -71,7 +109,10 @@
                                 id: file_box
                                 size_hint_y: None
                 AccordionItem:
+                    id: transforms_item
                     title: 'Transformations'
+                    locked: bool(root.transforms_locked)
+                    title_template: 'PresetAccordionItemTitle'
                     BoxLayout:
                         orientation: 'vertical'
                         pos_hint: {'top': 1}
