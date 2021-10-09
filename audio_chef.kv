@@ -144,6 +144,17 @@
 <TransformationForm>:
     height: 50
     size_hint_y: None
+    BoxLayout:
+        orientation: 'vertical'
+        width: 50
+        size_hint_x: None
+        Button:
+            text: '^'
+            on_release: root.shift_up()
+        Button:
+            text: 'v'
+            on_release: root.shift_down()
+
     Spinner:
         id: spinner
         width: 200

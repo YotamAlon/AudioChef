@@ -73,6 +73,18 @@ class TransformationForm(BoxLayout):
         super().__init__(**kwargs)
         self.selected_transform = None
 
+    def shift_up(self):
+        self_index = self.parent.children.index(self)
+        parent = self.parent
+        parent.remove_widget(self)
+        parent.add_widget(self, self_index + 1)
+
+    def shift_down(self):
+        self_index = self.parent.children.index(self)
+        parent = self.parent
+        parent.remove_widget(self)
+        parent.add_widget(self, max(self_index - 1, 0))
+
     def select_transformation(self, transform_name):
         self.selected_transform = self.get_transform_name_and_object(transform_name)
         self.ids.args_box.clear_widgets()
