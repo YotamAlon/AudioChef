@@ -130,13 +130,19 @@
     title: 'Added files'
     BoxLayout:
         orientation: 'vertical'
-        Label:
-            text: "The files you chose are:"
+        BoxLayout:
             height: 25
             size_hint_y: None
+            Label:
+                text: "The files you chose are:"
+            Button:
+                text: 'Clear all files'
+                width: 150
+                size_hint_x: None
+                on_release: app.dispatch('on_clear_files')
         ScrollView:
             GridLayout:
-                cols: 2
+                cols: 3
                 id: file_box
                 size_hint_y: None
 

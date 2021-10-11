@@ -169,6 +169,8 @@ class AudioChefWindow(BoxLayout):
         if default_preset_name:
             self.load_preset(default_preset_name)
 
+        app.bind(on_clear_files=self.clear_files)
+
     def reload_presets(self, presets):
         self.presets_box.clear_widgets()
         for preset in presets:
@@ -187,7 +189,21 @@ class AudioChefWindow(BoxLayout):
 
             preview_label = Label(text=self.get_output_filename(audio_file.filename))
             self.file_box.add_widget(preview_label)
-            self.file_widget_map[audio_file.filename] = (file_label, preview_label)
+
+            remove_button = Button(text='-', width=50, size_hint_x=None,
+                                   on_release=lambda x: self.remove_file(audio_file))
+            self.file_box.add_widget(remove_button)
+            self.file_widget_map[audio_file.filename] = (file_label, preview_label, remove_button)
+
+    def remove_file(self, file: AudioFile):
+        for widget in self.file_widget_map[file.filename]:
+            self.file_box.remove_widget(widget)
+        del self.file_widget_map[file.filename]
+        self.selected_files.remove(file)
+
+    def clear_files(self, button):
+        for file in self.selected_files[:]:
+            self.remove_file(file)
 
     def execute_preset(self):
         self.clear_messages()
@@ -303,8 +319,15 @@ class AudioChefWindow(BoxLayout):
 
 
 class AudioChefApp(App):
+    def __init__(self):
+        super().__init__()
+        self.register_event_type('on_clear_files')
+
     def build(self):
         return AudioChefWindow()
+
+    def on_clear_files(self):
+        pass
 
 
 if __name__ == "__main__":
