@@ -170,6 +170,8 @@ class AudioChefWindow(BoxLayout):
             self.load_preset(default_preset_name)
 
         app.bind(on_clear_files=self.clear_files)
+        app.bind(on_add_transform_item=self.add_tranform_item)
+        app.bind(on_name_changer_update=self.filename_preview)
 
     def reload_presets(self, presets):
         self.presets_box.clear_widgets()
@@ -307,13 +309,13 @@ class AudioChefWindow(BoxLayout):
     def get_output_ext(self, ext):
         return '.' + (self.ext_box.text or ext[1:])
 
-    def add_tranform_item(self):
+    def add_tranform_item(self, button):
         self.transforms_box.add_widget(TransformationForm(remove_callback=self.remove_transformation))
 
     def remove_transformation(self, accordion_item):
         self.transforms_box.remove_widget(accordion_item)
 
-    def filename_preview(self):
+    def filename_preview(self, button):
         for audio_file in self.selected_files:
             self.file_widget_map[audio_file.filename][1].text = self.get_output_filename(audio_file.filename)
 
@@ -322,11 +324,19 @@ class AudioChefApp(App):
     def __init__(self):
         super().__init__()
         self.register_event_type('on_clear_files')
+        self.register_event_type('on_add_transform_item')
+        self.register_event_type('on_name_changer_update')
 
     def build(self):
         return AudioChefWindow()
 
     def on_clear_files(self):
+        pass
+
+    def on_add_transform_item(self):
+        pass
+
+    def on_name_changer_update(self):
         pass
 
 
