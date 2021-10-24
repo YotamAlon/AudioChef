@@ -1,11 +1,44 @@
 #:kivy 2.0.0
 
+<Label>:
+    color: 'black'
+
+[AccordionItemTitle@Label]:
+    text: ctx.title
+    color: (1, 1, 1, 1) if ctx.item.collapse else (0, 0, 0, 1)
+    canvas.before:
+        Color:
+            rgb: app.dark_color if ctx.item.collapse else app.light_color
+        BorderImage:
+            source: 'atlas://assets/audiochef_theme/button'
+            pos: self.pos
+            size: self.size
+        PushMatrix
+        Translate:
+            xy: self.center_x, self.center_y
+        Rotate:
+            angle: 90 if ctx.item.orientation == 'horizontal' else 0
+            axis: 0, 0, 1
+        Translate:
+            xy: -self.center_x, -self.center_y
+    canvas.after:
+        PopMatrix
+
+<AccordionItem>:
+    background_normal: 'atlas://assets/audiochef_theme/button'
+    background_selected: 'atlas://assets/audiochef_theme/button'
+
+<Button>:
+    color: (1, 1, 1, 1)
+    background_normal: 'atlas://assets/audiochef_theme/button'
+    background_color: app.main_color
+
 [PresetAccordionItemTitle@BoxLayout]:
     canvas.before:
         Color:
-            rgb: 1, 1, 1
+            rgb: app.dark_color if ctx.item.collapse else app.light_color
         BorderImage:
-            source: ctx.item.background_normal if ctx.item.collapse else ctx.item.background_selected
+            source: 'atlas://assets/audiochef_theme/button'
             pos: self.pos
             size: self.size
         PushMatrix
@@ -21,15 +54,24 @@
     BoxLayout:
         Label:
             text: ctx.title
+            color: (1, 1, 1, 1) if ctx.item.collapse else (0, 0, 0, 1)
         SelectableButton:
+            selected: True
             text: 'Lock'
             on_release:
-                root.parent.parent.parent.locked = not root.parent.parent.parent.locked
-                self.select() if root.parent.parent.parent.locked else self.unselect()
-                self.text = 'Locked' if root.parent.parent.parent.locked else 'Lock'
+                self.selected = not self.selected
+                ctx.item.locked = not self.selected
+                self.text = 'Lock' if self.selected else 'Unlock'
 
 
 <AudioChefWindow>:
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.1
+        Rectangle:
+            pos: self.pos[0] + 50, self.pos[1] + 50
+            size: self.size[0] - 100, self.size[1] - 100
+            source: 'assets/chef_hat.png'
     orientation: 'vertical'
     name_changer: name_item.ids.name_changer
     name_locked: bool(name_item.locked)
@@ -187,9 +229,8 @@
 <SelectableButton>:
     width: max(120, self.texture_size[0])
     size_hint_x: None
-
-<Button>:
-    background_color: 'grey'
+    color: (1, 1, 1, 1) if self.selected else app.main_color
+    background_color: app.main_color if self.selected else (1, 1, 1, 1)
 
 
 <PresetButton>:

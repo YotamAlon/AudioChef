@@ -13,6 +13,8 @@ class FileLabel(Label): pass
 
 
 class SelectableButton(Button):
+    selected = BooleanProperty()
+
     def select(self):
         self.color = 'black'
         self.background_color = 'white'

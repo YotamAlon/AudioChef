@@ -45,7 +45,7 @@ class OutputChanger(BoxLayout):
 
     def on_mode(self, instance, mode):
         self.switch_widgets()
-        self.preview_callback()
+        app.dispatch('on_name_changer_update')
 
     def switch_widgets(self):
         for widget_name in self.ids:
@@ -247,7 +247,7 @@ class AudioChefWindow(BoxLayout):
         if not self.transforms_locked:
             self.transforms_box.clear_widgets()
             for transform_state in preset['transformations']:
-                self.add_tranform_item()
+                self.add_tranform_item(None)
                 logger.debug(self.transforms_box.children)
                 self.transforms_box.children[0].load_state(transform_state)
 
@@ -321,6 +321,12 @@ class AudioChefWindow(BoxLayout):
 
 
 class AudioChefApp(App):
+    icon = 'assets/chef_hat.png'
+    window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
+    main_color = (43 / 255, 130 / 255, 229 / 255)
+    light_color = (118 / 255, 168 / 255, 229 / 255)
+    dark_color = (23 / 255, 63 / 255, 107 / 255)
+
     def __init__(self):
         super().__init__()
         self.register_event_type('on_clear_files')
@@ -328,6 +334,7 @@ class AudioChefApp(App):
         self.register_event_type('on_name_changer_update')
 
     def build(self):
+        Window.clearcolor = self.window_background_color
         return AudioChefWindow()
 
     def on_clear_files(self):
