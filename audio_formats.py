@@ -3,8 +3,8 @@ import pydub
 import soundfile
 import subprocess
 
-output = subprocess.check_output(['ffmpeg', '-formats']).decode()
-lines = output.split('\r\n')
+output = subprocess.check_output(['ffmpeg', '-formats'], stdin=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+lines = output.decode().split('\r\n')
 
 ffmpeg_formats = {}
 for line in lines[lines.index(' --') + 1:-1]:
