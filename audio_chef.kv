@@ -81,37 +81,6 @@
     transforms_locked: bool(transforms_item.locked)
     presets_box: presets_box
     file_box: file_item.ids.file_box
-    BoxLayout:
-        orientation: 'vertical'
-        height: 175
-        size_hint_y: None
-        Label:
-            text: "Welcome to AudioChef.\nIn the future you'll be able to create recipes for me to cook"
-            height: 50
-            size_hint_y: None
-            text_size: self.width, None
-            size: self.texture_size
-        BoxLayout:
-            height: 25
-            size_hint_y: None
-            Button:
-                text: 'Save'
-                on_release: root.save_preset()
-            Button:
-                text: "GO"
-                on_release: root.execute_preset()
-        Label:
-            text: 'Messages:'
-            height: 50
-            size_hint_y: None
-            text_size: self.width, None
-            size: self.texture_size
-        Label:
-            id: messages_label
-            height: 50
-            size_hint_y: None
-            text_size: self.width, None
-            size: self.texture_size
     Accordion:
         AccordionItem:
             title: 'Presets'
@@ -120,19 +89,30 @@
                 orientation: 'vertical'
         AccordionItem:
             title: 'Current preset'
-            Accordion:
+            BoxLayout:
                 orientation: 'vertical'
-                ExtAccordionItem:
-                    id: ext_item
-                    locked: bool(root.ext_locked)
-                NameAccordionItem:
-                    id: name_item
-                    locked: bool(root.name_locked)
-                TransformsAccordionItem:
-                    id: transforms_item
-                    locked: bool(root.transforms_locked)
-                FilesAccordionItem:
-                    id: file_item
+                BoxLayout:
+                    height: 40
+                    size_hint_y: None
+                    Button:
+                        text: 'Save Preset'
+                        on_release: root.save_preset()
+                    Button:
+                        text: "Execute Preset"
+                        on_release: root.execute_preset()
+                Accordion:
+                    orientation: 'vertical'
+                    ExtAccordionItem:
+                        id: ext_item
+                        locked: bool(root.ext_locked)
+                    NameAccordionItem:
+                        id: name_item
+                        locked: bool(root.name_locked)
+                    TransformsAccordionItem:
+                        id: transforms_item
+                        locked: bool(root.transforms_locked)
+                    FilesAccordionItem:
+                        id: file_item
 
 
 
