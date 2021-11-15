@@ -2,3 +2,4 @@ kivy
 pydub
 soundfile
 pedalboard
+pyinstaller
