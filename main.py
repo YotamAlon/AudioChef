@@ -12,6 +12,7 @@ import logging.config
 from kivy.app import App
 from datetime import datetime
 from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
 from kivy.core.window import Window
@@ -241,7 +242,6 @@ class AudioChefWindow(BoxLayout):
             self.remove_file(file)
 
     def execute_preset(self):
-        self.clear_messages()
         try:
             self.check_input_file_formats()
             self.check_output_file_formats()
@@ -259,9 +259,15 @@ class AudioChefWindow(BoxLayout):
 
                 audio_file.write_audio_data(outfile_name, outfile_ext, res, sample_rate)
         except UnexecutableRecipeError as e:
-            self.add_message(str(e))
+            logger.error(repr(e))
+            Popup(title='I Encountered an Error!',
+                  content=Label(text='I wrote all the info for the developer in a log file.\n'
+                                     'Check the folder with AudioChef it in.'))
         except Exception:
-            traceback.print_exc()
+            logger.error(traceback.format_exc())
+            Popup(title='I Encountered an Error!',
+                  content=Label(text='I wrote all the info for the developer in a log file.\n'
+                                     'Check the folder with AudioChef it in.'))
 
     def save_preset(self):
         preset = {'name': str(uuid.uuid4()), 'ext': self.ext_box.text,
@@ -323,12 +329,6 @@ class AudioChefWindow(BoxLayout):
     def prepare_board(self, sample_rate, transformations):
         return Pedalboard([transform(**kwargs) for (_, transform), kwargs in transformations], sample_rate=sample_rate)
 
-    def clear_messages(self):
-        self.ids.messages_label.text = ''
-
-    def add_message(self, message):
-        self.ids.messages_label.text += '\n' + message
-
     def get_output_filename(self, filename):
         name, ext = os.path.splitext(filename)
         if ext.strip('.') not in [format_.ext for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode]:
@@ -387,7 +387,7 @@ class AudioChefApp(App):
 if __name__ == "__main__":
     try:
         loop = asyncio.get_event_loop()
-        raise ValueError('test')
+
         app = AudioChefApp()
         loop.run_until_complete(app.async_run(async_lib='asyncio'))
         loop.close()
