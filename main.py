@@ -8,6 +8,7 @@ import uuid
 import asyncio
 import logging
 import traceback
+import logging.config
 from kivy.app import App
 from datetime import datetime
 from kivy.uix.label import Label
@@ -22,9 +23,41 @@ from transformations import TRASNFORMATIONS
 from audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
 from helper_classes import UnexecutableRecipeError, ArgumentBox, PresetsFile, OptionsBox, PresetButton
 
+LOG_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {  # The formatter name, it can be anything that I wish
+            'format': '%(asctime)s %(name)s[%(process)d] %(levelname)s: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',  # How to display dates
+        },
+    },
+    'handlers': {
+        'file': {
+            'formatter': 'default',
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(os.getcwd(), 'audio_chef.log'),
+        },
+        'output': {
+            'formatter': 'default',
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'audiochef': {
+            'level': 'INFO',
+            'handlers': [
+                'file',
+                'output',
+            ]
+        }
+    },
+}
+
+logging.config.dictConfig(LOG_CONFIG)
 logger = logging.getLogger('audiochef')
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
 
 
 class OutputChanger(BoxLayout):
@@ -321,17 +354,21 @@ class AudioChefWindow(BoxLayout):
 
 
 class AudioChefApp(App):
+    version = '0.1'
     icon = 'assets/chef_hat.png'
     window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
     main_color = (43 / 255, 130 / 255, 229 / 255)
     light_color = (118 / 255, 168 / 255, 229 / 255)
     dark_color = (23 / 255, 63 / 255, 107 / 255)
+    log_level = logging.INFO
 
     def __init__(self):
+        logger.setLevel(self.log_level)
         super().__init__()
         self.register_event_type('on_clear_files')
         self.register_event_type('on_add_transform_item')
         self.register_event_type('on_name_changer_update')
+        self.load_kv('audio_chef.kv')
 
     def build(self):
         Window.clearcolor = self.window_background_color
@@ -348,9 +385,11 @@ class AudioChefApp(App):
 
 
 if __name__ == "__main__":
-    app = AudioChefApp()
-    app.load_kv('audio_chef.kv')
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(app.async_run(async_lib='asyncio'))
-    loop.close()
+    try:
+        loop = asyncio.get_event_loop()
+        raise ValueError('test')
+        app = AudioChefApp()
+        loop.run_until_complete(app.async_run(async_lib='asyncio'))
+        loop.close()
+    except Exception as e:
+        logger.critical(repr(e) + '\n' + traceback.format_exc())
