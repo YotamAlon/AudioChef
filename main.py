@@ -1,28 +1,27 @@
-import os
-os.environ['PATH'] += ';' + os.path.join(os.getcwd(), 'windows', 'ffmpeg', 'bin')
-
 import kivy
 kivy.require('2.0.0')
 
+import os
 import uuid
 import asyncio
-import logging
 import traceback
 import logging.config
 from kivy.app import App
 from datetime import datetime
+from kivy.core.window import Window
+from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
-from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from kivy.core.window import Window
-from kivy_helpers import toggle_widget
-from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from pedalboard import Pedalboard
+from audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile, load_audio_formats
+from helper_classes import ArgumentBox, OptionsBox, PresetsFile, PresetButton, UnexecutableRecipeError
+from kivy_helpers import toggle_widget
 from transformations import TRASNFORMATIONS
-from audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
-from helper_classes import UnexecutableRecipeError, ArgumentBox, PresetsFile, OptionsBox, PresetButton
+
+
 
 LOG_CONFIG = {
     'version': 1,
@@ -59,6 +58,37 @@ LOG_CONFIG = {
 
 logging.config.dictConfig(LOG_CONFIG)
 logger = logging.getLogger('audiochef')
+
+
+class AudioChefApp(App):
+    version = '0.1'
+    icon = 'assets/chef_hat.png'
+    window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
+    main_color = (43 / 255, 130 / 255, 229 / 255)
+    light_color = (118 / 255, 168 / 255, 229 / 255)
+    dark_color = (23 / 255, 63 / 255, 107 / 255)
+    log_level = logging.INFO
+
+    def __init__(self):
+        logger.setLevel(self.log_level)
+        super().__init__()
+        self.register_event_type('on_clear_files')
+        self.register_event_type('on_add_transform_item')
+        self.register_event_type('on_name_changer_update')
+        self.load_kv('audio_chef.kv')
+        load_audio_formats()
+
+    def build(self):
+        return AudioChefWindow()
+
+    def on_clear_files(self):
+        pass
+
+    def on_add_transform_item(self):
+        pass
+
+    def on_name_changer_update(self):
+        pass
 
 
 class OutputChanger(BoxLayout):
@@ -192,6 +222,7 @@ class AudioChefWindow(BoxLayout):
         self.file_widget_map = {}
         super().__init__(**kwargs)
         Window.bind(on_dropfile=self.on_dropfile)
+        Window.clearcolor = app.window_background_color
 
     def on_kv_post(self, base_widget):
         self.ext_box.name = 'Choose the output format (empty means the same as the input if supported)'
@@ -275,10 +306,10 @@ class AudioChefWindow(BoxLayout):
                   'name_changer': self.name_changer.get_state()}
         self.presets_file.save_preset(preset)
 
-    def load_preset(self, preset_name):
-        logger.debug(f'AudioChefWindow: loading preset {preset_name}')
-        preset = self.presets_file.get_preset(preset_name)
-        logger.debug(f'AudioChefWindow: preset {preset_name} - {preset}')
+    def load_preset(self, preset_id):
+        logger.debug(f'AudioChefWindow: loading preset {preset_id}')
+        preset = self.presets_file.get_preset(preset_id)
+        logger.debug(f'AudioChefWindow: preset {preset_id} - {preset}')
         logger.debug(self.ext_box.options)
         if not self.ext_locked:
             self.ext_box.text = preset['ext']
@@ -309,11 +340,11 @@ class AudioChefWindow(BoxLayout):
         self.presets_file.set_presets(presets)
 
     def check_input_file_formats(self):
-        for filename in self.selected_files:
-            name, ext = os.path.splitext(filename)
+        for audio_file in self.selected_files:
+            name, ext = os.path.splitext(audio_file.filename)
 
             if ext.lower()[1:] not in [format_.ext.lower() for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode]:
-                raise UnexecutableRecipeError(f'"{filename}" is not in a supported format')
+                raise UnexecutableRecipeError(f'"{audio_file.filename}" is not in a supported format')
 
     def check_output_file_formats(self):
         if not self.ext_box.validated:
@@ -351,37 +382,6 @@ class AudioChefWindow(BoxLayout):
     def filename_preview(self, button):
         for audio_file in self.selected_files:
             self.file_widget_map[audio_file.filename][1].text = self.get_output_filename(audio_file.filename)
-
-
-class AudioChefApp(App):
-    version = '0.1'
-    icon = 'assets/chef_hat.png'
-    window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
-    main_color = (43 / 255, 130 / 255, 229 / 255)
-    light_color = (118 / 255, 168 / 255, 229 / 255)
-    dark_color = (23 / 255, 63 / 255, 107 / 255)
-    log_level = logging.INFO
-
-    def __init__(self):
-        logger.setLevel(self.log_level)
-        super().__init__()
-        self.register_event_type('on_clear_files')
-        self.register_event_type('on_add_transform_item')
-        self.register_event_type('on_name_changer_update')
-        self.load_kv('audio_chef.kv')
-
-    def build(self):
-        Window.clearcolor = self.window_background_color
-        return AudioChefWindow()
-
-    def on_clear_files(self):
-        pass
-
-    def on_add_transform_item(self):
-        pass
-
-    def on_name_changer_update(self):
-        pass
 
 
 if __name__ == "__main__":

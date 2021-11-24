@@ -90,9 +90,9 @@ class PresetsFile:
         with open(self.filename, 'r') as f:
             return json.load(f)
 
-    def get_preset(self, name):
+    def get_preset(self, id):
         presets = self.get_presets()
-        return next((preset for preset in presets if preset['name'] == name), None)
+        return presets[id] if len(presets) > id else None
 
     def set_presets(self, presets):
         with open(self.filename, 'w') as f:

@@ -3,20 +3,8 @@ import pydub
 import soundfile
 import subprocess
 
-output = subprocess.check_output(['ffmpeg', '-formats'], stdin=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-lines = output.decode().split('\r\n')
-
 ffmpeg_formats = {}
-for line in lines[lines.index(' --') + 1:-1]:
-    encode_decode, exts, description = line.strip().split(maxsplit=2)
-    for ext in exts.split(','):
-        if ext in ffmpeg_formats:
-            ffmpeg_formats[ext]['can_decode'] |= 'D' in encode_decode
-            ffmpeg_formats[ext]['can_encode'] |= 'E' in encode_decode
-            ffmpeg_formats[ext]['description'] += '|' + description
-        else:
-            ffmpeg_formats[ext] = {'can_decode': 'D' in encode_decode, 'can_encode': 'E' in encode_decode,
-                                   'description': description}
+SUPPORTED_AUDIO_FORMATS = []
 
 
 class AudioFormatter:
@@ -44,19 +32,6 @@ class FFMPEGAudioFormatter(AudioFormatter):
     def encode(self, input_file, output_file):
         given_audio = pydub.AudioSegment.from_file(input_file, format='wav')
         given_audio.export(output_file, format=self.ext)
-
-
-SUPPORTED_AUDIO_FORMATS = [FFMPEGAudioFormatter(**{'ext': ext, **ext_details})
-                           for ext, ext_details in ffmpeg_formats.items()]
-
-# m4a is just mp4 that doesn't have video, so use mp4 formatter encoding as a workaround to support m4a fully
-m4a_formatter = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == 'm4a'))
-if m4a_formatter.can_encode:
-    print('It appears ffmpeg now supports m4a encoding out-of-the-box. You can remove this code')
-else:
-    mp4_formatter = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == 'mp4'))
-    m4a_formatter.can_encode = True
-    m4a_formatter.encode = mp4_formatter.encode
 
 
 class AudioFile:
@@ -94,3 +69,31 @@ class AudioFile:
 
         output_format = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == output_ext.strip('.')), None)
         output_format.encode(output_name + '.wav', output_name + output_ext)
+
+
+def load_audio_formats():
+    output = subprocess.check_output(['ffmpeg', '-formats'], stdin=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    lines = output.decode().split('\r\n')
+
+    for line in lines[lines.index(' --') + 1:-1]:
+        encode_decode, exts, description = line.strip().split(maxsplit=2)
+        for ext in exts.split(','):
+            if ext in ffmpeg_formats:
+                ffmpeg_formats[ext]['can_decode'] |= 'D' in encode_decode
+                ffmpeg_formats[ext]['can_encode'] |= 'E' in encode_decode
+                ffmpeg_formats[ext]['description'] += '|' + description
+            else:
+                ffmpeg_formats[ext] = {'can_decode': 'D' in encode_decode, 'can_encode': 'E' in encode_decode,
+                                       'description': description}
+
+    SUPPORTED_AUDIO_FORMATS.extend([FFMPEGAudioFormatter(**{'ext': ext, **ext_details})
+                                    for ext, ext_details in ffmpeg_formats.items()])
+
+    # m4a is just mp4 that doesn't have video, so use mp4 formatter encoding as a workaround to support m4a fully
+    m4a_formatter = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == 'm4a'))
+    if m4a_formatter.can_encode:
+        print('It appears ffmpeg now supports m4a encoding out-of-the-box. You can remove this code')
+    else:
+        mp4_formatter = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == 'mp4'))
+        m4a_formatter.can_encode = True
+        m4a_formatter.encode = mp4_formatter.encode
