@@ -1,10 +1,15 @@
 import os
+import pprint
+
 import pydub
+import logging
 import soundfile
 import subprocess
 
 ffmpeg_formats = {}
 SUPPORTED_AUDIO_FORMATS = []
+
+logger = logging.getLogger('audiochef')
 
 
 class AudioFormatter:
@@ -72,6 +77,7 @@ class AudioFile:
 
 
 def load_audio_formats():
+    logger.info('Loading supported audio formats from ffmpeg ...')
     output = subprocess.check_output(['ffmpeg', '-formats'], stdin=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     lines = output.decode().split('\r\n')
 
@@ -97,3 +103,7 @@ def load_audio_formats():
         mp4_formatter = next((format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == 'mp4'))
         m4a_formatter.can_encode = True
         m4a_formatter.encode = mp4_formatter.encode
+
+    logger.debug(pprint.pformat(SUPPORTED_AUDIO_FORMATS))
+    logger.info(f'Loaded {len(SUPPORTED_AUDIO_FORMATS)} audio formats.')
+
