@@ -22,41 +22,6 @@ from transformations import TRASNFORMATIONS
 logger = logging.getLogger('audiochef')
 
 
-class AudioChefApp(App):
-    version = '0.1'
-    icon = 'assets/chef_hat.png'
-    window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
-    main_color = (43 / 255, 130 / 255, 229 / 255)
-    light_color = (118 / 255, 168 / 255, 229 / 255)
-    dark_color = (23 / 255, 63 / 255, 107 / 255)
-    log_level = logging.INFO
-
-    def __init__(self):
-        logger.setLevel(self.log_level)
-        super().__init__()
-        logger.info('Registering custom events ...')
-        self.register_event_type('on_clear_files')
-        self.register_event_type('on_add_transform_item')
-        self.register_event_type('on_name_changer_update')
-
-        logger.info('Loading KV file ...')
-        self.load_kv('audio_chef.kv')
-
-    def build(self):
-        logger.info('Loading audio formats ...')
-        load_audio_formats()
-        return AudioChefWindow()
-
-    def on_clear_files(self):
-        pass
-
-    def on_add_transform_item(self):
-        pass
-
-    def on_name_changer_update(self):
-        pass
-
-
 class OutputChanger(BoxLayout):
     wildcards = ['$item', '$date']
     mode = StringProperty('replace')
@@ -352,6 +317,43 @@ class AudioChefWindow(BoxLayout):
     def filename_preview(self, button):
         for audio_file in self.selected_files:
             self.file_widget_map[audio_file.filename][1].text = self.get_output_filename(audio_file.filename)
+
+
+class AudioChefApp(App):
+    version = '0.1'
+    icon = 'assets/chef_hat.png'
+    window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
+    main_color = (43 / 255, 130 / 255, 229 / 255)
+    light_color = (118 / 255, 168 / 255, 229 / 255)
+    dark_color = (23 / 255, 63 / 255, 107 / 255)
+    log_level = logging.INFO
+    run_dir = None
+
+    def __init__(self):
+        logger.setLevel(self.log_level)
+        super().__init__()
+
+    def build(self):
+        logger.info('Registering custom events ...')
+        self.register_event_type('on_clear_files')
+        self.register_event_type('on_add_transform_item')
+        self.register_event_type('on_name_changer_update')
+
+        logger.info('Loading KV file ...')
+        self.load_kv(os.path.join(self.run_dir, 'audio_chef.kv'))
+
+        logger.info('Loading audio formats ...')
+        load_audio_formats()
+        return AudioChefWindow()
+
+    def on_clear_files(self):
+        pass
+
+    def on_add_transform_item(self):
+        pass
+
+    def on_name_changer_update(self):
+        pass
 
 
 app = AudioChefApp()
