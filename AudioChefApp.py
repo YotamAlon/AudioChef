@@ -340,7 +340,7 @@ class AudioChefApp(App):
         self.register_event_type('on_name_changer_update')
 
         logger.info('Loading KV file ...')
-        self.load_kv(os.path.join(self.run_dir, 'audio_chef.kv'))
+        self.load_kv('audio_chef.kv')
 
         logger.info('Loading audio formats ...')
         load_audio_formats()

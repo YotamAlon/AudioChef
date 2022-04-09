@@ -78,8 +78,10 @@ class AudioFile:
 
 def load_audio_formats():
     logger.info('Loading supported audio formats from ffmpeg ...')
-    output = subprocess.check_output(['ffmpeg', '-formats'], stdin=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    lines = output.decode().split('\r\n')
+    logger.debug(f'running ffmpeg')
+    output = subprocess.check_output(['ffmpeg', '-formats'], stdin=subprocess.DEVNULL, stderr=subprocess.DEVNULL).decode()
+    logger.debug(output)
+    lines = output.split('\r\n')
 
     for line in lines[lines.index(' --') + 1:-1]:
         encode_decode, exts, description = line.strip().split(maxsplit=2)
