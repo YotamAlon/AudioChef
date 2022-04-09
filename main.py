@@ -2,7 +2,7 @@ import os
 log_file_name = os.path.join(os.getcwd(), 'audio_chef.log')
 
 import sys
-sys.stdout = sys.stderr = open(log_file_name, 'a')
+# sys.stdout = sys.stderr = open(log_file_name, 'a')
 
 import kivy
 kivy.require('2.0.0')

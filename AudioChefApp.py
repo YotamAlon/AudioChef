@@ -60,13 +60,34 @@ class OutputChanger(BoxLayout):
         self.ids.replace_to_input.text = state['replace_to_input']
 
 
+class TransformationParameterPopup(Popup):
+    save_callback = ObjectProperty()
+
+    def __init__(self, arguments, **kwargs):
+        super().__init__(**kwargs)
+        for arg in arguments:
+            if arg.options is not None:
+                pass
+            else:
+                logger.debug(f'TransformationForm ({id(self)}): adding ArgumentBox(type={arg.type}, name={arg.name}, '
+                             f'text={str(arg.default) if arg.default is not None else arg.type()}')
+                self.ids.args_box.add_widget(ArgumentBox(
+                    type=arg.type, name=arg.name,
+                    initial=str(arg.default) if arg.default is not None else arg.type(),
+                ))
+
+    def get_argument_dict(self):
+        return {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
+
+
 class TransformationForm(BoxLayout):
     remove_callback = ObjectProperty()
     transformations = TRASNFORMATIONS.keys()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.selected_transform = None
+        self.selected_transform: str = None
+        self.arg_values = {}
 
     def shift_up(self):
         self_index = self.parent.children.index(self)
@@ -81,41 +102,25 @@ class TransformationForm(BoxLayout):
         parent.add_widget(self, max(self_index - 1, 0))
 
     def select_transformation(self, transform_name):
-        self.selected_transform = self.get_transform_name_and_object(transform_name)
+        self.selected_transform = transform_name
         self.ids.args_box.clear_widgets()
-        self.load_argument_boxes(TRASNFORMATIONS[self.selected_transform[0]])
-        self.update_title()
 
-    def get_transform_name_and_object(self, transform_name):
-        return (transform_name, TRASNFORMATIONS[transform_name].trasform)
+    def open_parameter_popup(self):
+        TransformationParameterPopup(TRASNFORMATIONS[self.selected_transform].arguments,
+                                     title=f'Edit {self.selected_transform} parameters',
+                                     save_callback=self.update_arg_values).open()
 
-    def load_argument_boxes(self, transform):
-        for arg in transform.arguments:
-            if arg.options is not None:
-                pass
-            else:
-                logger.debug(f'TransformationForm ({id(self)}): adding ArgumentBox(type={arg.type}, name={arg.name}, '
-                             f'text={str(arg.default) if arg.default is not None else arg.type()}')
-                self.ids.args_box.add_widget(ArgumentBox(
-                    type=arg.type, name=arg.name,
-                    initial=str(arg.default) if arg.default is not None else arg.type(),
-                    on_text=self.update_title
-                ))
-
-    def update_title(self):
-        (transform_name, _), kwargs = self.get_selected_tranform()
+    def update_arg_values(self, arg_values: dict):
+        self.arg_values = arg_values
+        logger.debug(f'Arguments for {self.selected_transform} updated to {arg_values}')
 
     def get_selected_tranform(self):
         if self.selected_transform is None:
             return None
-        return self.selected_transform, self.get_args_dict()
+        return self.selected_transform, self.arg_values
 
-    def get_args_dict(self):
-        return {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
-
-    def load_args_dict(self, args_dict):
-        for arg in self.ids.args_box.children:
-            arg.text = str(args_dict[arg.name])
+    def load_args_dict(self, args_dict: dict):
+        self.arg_values = args_dict
 
     def remove(self):
         self.remove_callback(self)
@@ -123,16 +128,15 @@ class TransformationForm(BoxLayout):
     def get_state(self):
         if self.selected_transform is None:
             return None
-        return {'transform_name': self.selected_transform[0], 'args': self.get_args_dict()}
+        return {'transform_name': self.selected_transform, 'args': self.arg_values}
 
     def load_state(self, state):
         logger.debug(f'TransformationForm ({id(self)}): loading state {state}')
         if state is None:
             return
 
-        self.selected_transform = self.get_transform_name_and_object(state['transform_name'])
+        self.selected_transform = state['transform_name']
         self.ids.spinner.text = state['transform_name']
-        self.load_argument_boxes(TRASNFORMATIONS[self.selected_transform[0]])
         self.load_args_dict(state['args'])
 
 

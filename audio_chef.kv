@@ -175,6 +175,27 @@
                     size_hint_y: None
 
 
+<TransformationParameterPopup>:
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            BoxLayout:
+                id: args_box
+                size_hint_y: None
+                orientation: 'vertical'
+        BoxLayout:
+            height: 50
+            size_hint_y: None
+            orientation: 'horizontal'
+            Button:
+                text: 'Save'
+                on_release: root.save_callback(root.get_argument_dict()); root.dismiss()
+            Button:
+                text: 'Cancel'
+                on_release: root.dismiss()
+
+
+
 <TransformationForm>:
     height: 50
     size_hint_y: None
@@ -196,6 +217,9 @@
         text: 'Choose a tranformation:'
         values: root.transformations
         on_text: root.select_transformation(self.text)
+    Button:
+        text: "Edit parameters"
+        on_release: root.open_parameter_popup()
     ScrollView:
         BoxLayout:
             id: args_box

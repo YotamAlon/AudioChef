@@ -12,7 +12,7 @@ class Argument:
 
 class TransformationWrapper:
     def __init__(self, transform, *arguments):
-        self.trasform = transform
+        self.transform = transform
         self.arguments = arguments
 
 
