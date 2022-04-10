@@ -3,65 +3,10 @@
 <Label>:
     color: 'black'
 
-[AccordionItemTitle@Label]:
-    text: ctx.title
-    color: (1, 1, 1, 1) if ctx.item.collapse else (0, 0, 0, 1)
-    canvas.before:
-        Color:
-            rgb: app.dark_color if ctx.item.collapse else app.light_color
-        BorderImage:
-            source: 'atlas://assets/audiochef_theme/button'
-            pos: self.pos
-            size: self.size
-        PushMatrix
-        Translate:
-            xy: self.center_x, self.center_y
-        Rotate:
-            angle: 90 if ctx.item.orientation == 'horizontal' else 0
-            axis: 0, 0, 1
-        Translate:
-            xy: -self.center_x, -self.center_y
-    canvas.after:
-        PopMatrix
-
-<AccordionItem>:
-    background_normal: 'atlas://assets/audiochef_theme/button'
-    background_selected: 'atlas://assets/audiochef_theme/button'
-
 <Button>:
     color: (1, 1, 1, 1)
     background_normal: 'atlas://assets/audiochef_theme/button'
     background_color: app.main_color
-
-[PresetAccordionItemTitle@BoxLayout]:
-    canvas.before:
-        Color:
-            rgb: app.dark_color if ctx.item.collapse else app.light_color
-        BorderImage:
-            source: 'atlas://assets/audiochef_theme/button'
-            pos: self.pos
-            size: self.size
-        PushMatrix
-        Translate:
-            xy: self.center_x, self.center_y
-        Rotate:
-            angle: 90 if ctx.item.orientation == 'horizontal' else 0
-            axis: 0, 0, 1
-        Translate:
-            xy: -self.center_x, -self.center_y
-    canvas.after:
-        PopMatrix
-    BoxLayout:
-        Label:
-            text: ctx.title
-            color: (1, 1, 1, 1) if ctx.item.collapse else (0, 0, 0, 1)
-        SelectableButton:
-            selected: True
-            text: 'Lock'
-            on_release:
-                self.selected = not self.selected
-                ctx.item.locked = not self.selected
-                self.text = 'Lock' if self.selected else 'Unlock'
 
 
 <AudioChefWindow>:
@@ -81,14 +26,24 @@
     transforms_locked: bool(transforms_item.locked)
     presets_box: presets_box
     file_box: file_item.ids.file_box
-    Accordion:
-        AccordionItem:
-            title: 'Presets'
+    BoxLayout:
+        orientation: 'horizontal'
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: .50
+            Label:
+                text: 'Presets'
+                size_hint_y: None
+                height: 50
             BoxLayout:
                 id: presets_box
                 orientation: 'vertical'
-        AccordionItem:
-            title: 'Current preset'
+        BoxLayout:
+            orientation: 'vertical'
+            Label:
+                text: 'Current preset'
+                size_hint_y: None
+                height: 50
             BoxLayout:
                 orientation: 'vertical'
                 BoxLayout:
@@ -100,38 +55,65 @@
                     Button:
                         text: "Execute Preset"
                         on_release: root.execute_preset()
-                Accordion:
+                BoxLayout:
                     orientation: 'vertical'
-                    ExtAccordionItem:
+                    ExtBox:
                         id: ext_item
                         locked: bool(root.ext_locked)
-                    NameAccordionItem:
+                    NameBox:
                         id: name_item
                         locked: bool(root.name_locked)
-                    TransformsAccordionItem:
+                    TransformsBox:
                         id: transforms_item
                         locked: bool(root.transforms_locked)
-                    FilesAccordionItem:
+                    FilesBox:
                         id: file_item
 
 
 
-<ExtAccordionItem@AccordionItem>:
-    title: 'Output Format'
-    title_template: 'PresetAccordionItemTitle'
+
+<ExtBox@BoxLayout>:
+    orientation: 'vertical'
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        Label:
+            text: 'Output Format'
+        SelectableButton:
+            selected: True
+            text: 'Lock'
+            on_release:
+                self.selected = not self.selected
+                root.locked = not self.selected
+                self.text = 'Lock' if self.selected else 'Unlock'
     OptionsBox:
         id: ext_box
 
 
-<NameAccordionItem@AccordionItem>:
-    title: 'File Name Changer'
-    title_template: 'PresetAccordionItemTitle'
+<NameBox@BoxLayout>:
+    orientation: 'vertical'
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        Label:
+            text: 'File Name Changer'
+        SelectableButton:
+            selected: True
+            text: 'Lock'
+            on_release:
+                self.selected = not self.selected
+                root.locked = not self.selected
+                self.text = 'Lock' if self.selected else 'Unlock'
     OutputChanger:
         id: name_changer
 
 
-<FilesAccordionItem@AccordionItem>:
-    title: 'Added files'
+<FilesBox@BoxLayout>:
+    orientation: 'vertical'
+    Label:
+        text: 'Added files'
     BoxLayout:
         orientation: 'vertical'
         BoxLayout:
@@ -151,9 +133,21 @@
                 size_hint_y: None
 
 
-<TransformsAccordionItem@AccordionItem>:
-    title: 'Transformations'
-    title_template: 'PresetAccordionItemTitle'
+<TransformsBox@BoxLayout>:
+    orientation: 'vertical'
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        Label:
+            text: 'Transformations'
+        SelectableButton:
+            selected: True
+            text: 'Lock'
+            on_release:
+                self.selected = not self.selected
+                root.locked = not self.selected
+                self.text = 'Lock' if self.selected else 'Unlock'
     BoxLayout:
         orientation: 'vertical'
         pos_hint: {'top': 1}
@@ -238,6 +232,8 @@
 
 
 <PresetButton>:
+    size_hint_y: None
+    pos_hint_y: 0
     height: 50
     TextInput:
         text: root.preset_name
