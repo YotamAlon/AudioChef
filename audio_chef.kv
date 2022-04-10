@@ -110,27 +110,29 @@
         id: name_changer
 
 
-<FilesBox@BoxLayout>:
-    orientation: 'vertical'
-    Label:
-        text: 'Added files'
+<FilesBox@ScrollView>:
     BoxLayout:
         orientation: 'vertical'
+        size_hint_y: None
+        Label:
+            text: 'Added files'
         BoxLayout:
-            height: 25
-            size_hint_y: None
-            Label:
-                text: "The files you chose are:"
-            Button:
-                text: 'Clear all files'
-                width: 150
-                size_hint_x: None
-                on_release: app.dispatch('on_clear_files')
-        ScrollView:
-            GridLayout:
-                cols: 3
-                id: file_box
+            orientation: 'vertical'
+            BoxLayout:
+                height: 25
                 size_hint_y: None
+                Label:
+                    text: "The files you chose are:"
+                Button:
+                    text: 'Clear all files'
+                    width: 150
+                    size_hint_x: None
+                    on_release: app.dispatch('on_clear_files')
+            ScrollView:
+                GridLayout:
+                    cols: 3
+                    id: file_box
+                    size_hint_y: None
 
 
 <TransformsBox@BoxLayout>:
@@ -275,6 +277,8 @@
             group: 'name_changer'
             on_active: root.mode = 'wildcards'
     RelativeLayout:
+        size_hint_y: None
+        height: 55
         GridLayout:
             cols: 2
             Label:
@@ -289,12 +293,12 @@
                 text: 'With this:'
             TextInput:
                 id: replace_from_input
-                height: 25
+                height: 30
                 size_hint_y: None
                 on_text: app.dispatch('on_name_changer_update')
             TextInput:
                 id: replace_to_input
-                height: 25
+                height: 30
                 size_hint_y: None
                 text: ''
                 on_text: app.dispatch('on_name_changer_update')
@@ -307,7 +311,7 @@
                 text: 'Output Format:'
             TextInput:
                 id: wildcards_input
-                height: 25
+                height: 30
                 size_hint_y: None
                 on_text: app.dispatch('on_name_changer_update')
 
