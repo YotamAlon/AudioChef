@@ -161,6 +161,7 @@ class AudioChefWindow(BoxLayout):
         logger.debug('Binding dropfile event ...')
         Window.bind(on_dropfile=self.on_dropfile)
         Window.clearcolor = app.window_background_color
+        Window.size = (1280, 720)
         logger.debug('Initialization of AudioChef main window completed.')
 
     def on_kv_post(self, base_widget):

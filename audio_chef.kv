@@ -8,6 +8,10 @@
     background_normal: 'atlas://assets/audiochef_theme/button'
     background_color: app.main_color
 
+<CheckBox>:
+    background_radio_down: 'atlas://assets/audiochef_theme/checkbox_radio_on'
+    background_radio_normal: 'atlas://assets/audiochef_theme/checkbox_radio_off'
+
 
 <AudioChefWindow>:
     canvas.before:
@@ -74,6 +78,8 @@
 
 <ExtBox@BoxLayout>:
     orientation: 'vertical'
+    size_hint_y: None
+    height: 80
     BoxLayout:
         orientation: 'horizontal'
         size_hint_y: None
@@ -89,6 +95,8 @@
                 self.text = 'Lock' if self.selected else 'Unlock'
     OptionsBox:
         id: ext_box
+        size_hint_y: None
+        height: 30
 
 
 <NameBox@BoxLayout>:
@@ -259,20 +267,23 @@
 
 <OutputChanger>:
     orientation: 'vertical'
-    GridLayout:
-        cols: 2
+    BoxLayout:
+        orientation: 'horizontal'
         Label:
             text: 'Choose file name change type:'
         Label:
-        Label:
             text: 'Replace text'
         CheckBox:
+            size_hint_x: None
+            width: 40
             active: root.mode == 'replace'
             group: 'name_changer'
             on_active: root.mode = 'replace'
         Label:
             text: 'Wildcards'
         CheckBox:
+            size_hint_x: None
+            width: 40
             active: root.mode == 'wildcards'
             group: 'name_changer'
             on_active: root.mode = 'wildcards'
