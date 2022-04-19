@@ -3,7 +3,7 @@ import os
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, BooleanProperty, ObjectProperty
+from kivy.properties import StringProperty, BooleanProperty, ObjectProperty, NumericProperty
 
 
 class UnexecutableRecipeError(Exception): pass
@@ -62,6 +62,9 @@ class OptionsBox(ValidatedInput):
 
 class ArgumentBox(ValidatedInput):
     type = ObjectProperty()
+    min = NumericProperty()
+    max = NumericProperty()
+    step = NumericProperty()
 
     def on_kv_post(self, base_widget):
         self.text = self.initial
