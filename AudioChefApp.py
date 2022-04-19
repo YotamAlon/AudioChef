@@ -177,6 +177,7 @@ class AudioChefWindow(BoxLayout):
         app.bind(on_clear_files=self.clear_files)
         app.bind(on_add_transform_item=self.add_tranform_item)
         app.bind(on_name_changer_update=self.filename_preview)
+        app.bind(on_output_format_update=self.filename_preview)
 
     def reload_presets(self, presets):
         self.presets_box.clear_widgets()
@@ -343,6 +344,7 @@ class AudioChefApp(App):
         self.register_event_type('on_clear_files')
         self.register_event_type('on_add_transform_item')
         self.register_event_type('on_name_changer_update')
+        self.register_event_type('on_output_format_update')
 
         logger.info('Loading KV file ...')
         self.load_kv('audio_chef.kv')
@@ -358,6 +360,9 @@ class AudioChefApp(App):
         pass
 
     def on_name_changer_update(self):
+        pass
+
+    def on_output_format_update(self):
         pass
 
 
