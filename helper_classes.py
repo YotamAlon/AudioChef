@@ -3,25 +3,32 @@ import os
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, BooleanProperty, ObjectProperty, NumericProperty
+from kivy.properties import (
+    StringProperty,
+    BooleanProperty,
+    ObjectProperty,
+    NumericProperty,
+)
 
 
-class UnexecutableRecipeError(Exception): pass
+class UnexecutableRecipeError(Exception):
+    pass
 
 
-class FileLabel(Label): pass
+class FileLabel(Label):
+    pass
 
 
 class SelectableButton(Button):
     selected = BooleanProperty()
 
     def select(self):
-        self.color = 'black'
-        self.background_color = 'white'
+        self.color = "black"
+        self.background_color = "white"
 
     def unselect(self):
-        self.color = 'white'
-        self.background_color = 'grey'
+        self.color = "white"
+        self.background_color = "grey"
 
 
 class ValidatedInput(BoxLayout):
@@ -43,14 +50,14 @@ class ValidatedInput(BoxLayout):
         raise NotImplementedError()
 
     def on_validated(self, instance, value):
-        text_input = self.ids.get('text_input')
+        text_input = self.ids.get("text_input")
         if not text_input:
             return
 
         if value:
-            text_input.background_color = 'white'
+            text_input.background_color = "white"
         else:
-            text_input.background_color = 'lightsalmon'
+            text_input.background_color = "lightsalmon"
 
 
 class OptionsBox(ValidatedInput):
@@ -73,51 +80,75 @@ class ArgumentBox(ValidatedInput):
         self.type(text)
 
 
-class PresetsFile:
-    filename = os.path.join(os.getcwd(), 'presets.db')
+class ConfigurationFile:
+    filename = os.path.join(os.getcwd(), "configuration.db")
 
-    def save_preset(self, preset):
+    def get_configuration(self) -> dict:
+        with open(self.filename, "r") as f:
+            return json.load(f)
+
+    def set_configuration(self, configuration: dict) -> None:
+        with open(self.filename, "w") as f:
+            json.dump(configuration, f, indent=4)
+
+    def save_preset(self, preset: dict) -> None:
         presets_list = self.get_presets()
-        if 'order' in preset:
-            preset['order'] = int(preset['order'])
-        else:
-            preset['order'] = len(presets_list)
+        if "order" not in preset:
+            preset["order"] = len(presets_list)
         presets_list.append(preset)
         self.set_presets(presets_list)
 
-    def get_presets(self):
-        if not os.path.exists(self.filename):
-            with open(self.filename, 'w') as f:
-                json.dump([], f)
+    def get_presets(self) -> list:
+        return self.get_configuration()["presets"]
 
-        with open(self.filename, 'r') as f:
-            return json.load(f)
-
-    def get_preset(self, id):
+    def get_preset(self, id_: int) -> dict:
         presets = self.get_presets()
-        return presets[id] if len(presets) > id else None
+        return presets[id_] if len(presets) > id_ else None
 
-    def set_presets(self, presets):
-        with open(self.filename, 'w') as f:
-            json.dump(presets, f, indent=4)
-
-    def remove_preset(self, name):
+    def get_preset_by_name(self, name: str) -> dict:
         presets = self.get_presets()
-        preset = next((preset for preset in presets if preset['name'] == name), None)
+        return next((preset for preset in presets if preset["name"] == name), None)
+
+    def set_presets(self, presets: list) -> None:
+        configuration = self.get_configuration()
+        configuration["presets"] = presets
+        self.set_configuration(configuration)
+
+    def remove_preset(self, name: str) -> None:
+        presets = self.get_presets()
+        preset = next((preset for preset in presets if preset["name"] == name), None)
         presets.remove(preset)
         self.set_presets(presets)
 
-    def rename_preset(self, name, new_name):
+    def rename_preset(self, name: str, new_name: str) -> None:
         presets = self.get_presets()
         for preset in presets:
-            if preset['name'] == name:
-                preset['name'] = new_name
+            if preset["name"] == name:
+                preset["name"] = new_name
                 break
 
         self.set_presets(presets)
 
+    def initialize(self, TRASNFORMATIONS: dict) -> None:
+        if not os.path.exists(self.filename):
+            defaults = {}
+            for transformation_name, transformation in TRASNFORMATIONS.items():
+                arguments_dict = {}
+                for argument in transformation.arguments:
+                    if argument.type is float:
+                        arguments_dict[argument.name] = {
+                            "max": argument.max,
+                            "min": argument.min,
+                            "step": argument.step,
+                        }
+                if len(arguments_dict) != 0:
+                    defaults[transformation_name] = arguments_dict
+
+            self.set_configuration({"defaults": defaults, "presets": []})
+
 
 class PresetButton(BoxLayout):
+    preset_id = NumericProperty()
     preset_name = ObjectProperty()
     default = BooleanProperty()
     load_preset = ObjectProperty()
