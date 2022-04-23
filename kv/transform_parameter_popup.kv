@@ -19,13 +19,13 @@
 
 
 
-<ArgumentBox>:
+<FloatArgumentBox>:
     width: 240
     size_hint_x: None
     Slider:
         id: slider
-        min: 0
-        max: 100
+        min: app.config.getfloat(root.transformation_name, root.name + ' min')
+        max: app.config.getfloat(root.transformation_name, root.name + ' max')
+        step: app.config.getfloat(root.transformation_name, root.name + ' step')
         value: root.text if root.text.replace('.', '', 1).isdigit() else self.min
         on_touch_move: root.text = str(self.value)
-        step: 10

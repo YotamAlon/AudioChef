@@ -44,7 +44,7 @@ TRASNFORMATIONS = {
         Convolution,
         [
             Argument("impulse_response_filename", str),
-            Argument("mix", float, default=1.0),
+            Argument("mix", float, 1.0),
         ],
     ),
     "Compressor": TransformationWrapper(

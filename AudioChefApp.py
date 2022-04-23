@@ -19,9 +19,9 @@ from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 from pedalboard import Pedalboard
 
+from TransformationParameterPopup import TransformationParameterPopup
 from audio_formats import load_audio_formats, SUPPORTED_AUDIO_FORMATS, AudioFile
 from helper_classes import (
-    ArgumentBox,
     OptionsBox,
     ConfigurationFile,
     PresetButton,
@@ -161,43 +161,13 @@ class OutputChanger(BoxLayout):
         self.ids.replace_to_input.text = state["replace_to_input"]
 
 
-class TransformationParameterPopup(Popup):
-    save_callback = ObjectProperty()
-
-    def __init__(self, arguments, **kwargs):
-        super().__init__(**kwargs)
-        for arg in arguments:
-            if arg.options is not None:
-                pass
-            else:
-                logger.debug(
-                    f"TransformationForm ({id(self)}): adding ArgumentBox(type={arg.type}, name={arg.name}, "
-                    f"text={str(arg.default) if arg.default is not None else arg.type()}"
-                )
-                self.ids.args_box.add_widget(
-                    ArgumentBox(
-                        type=arg.type,
-                        name=arg.name,
-                        initial=str(arg.default)
-                        if arg.default is not None
-                        else arg.type(),
-                        min=arg.min,
-                        max=arg.max,
-                        step=arg.step,
-                    )
-                )
-
-    def get_argument_dict(self):
-        return {arg.name: arg.type(arg.text) for arg in self.ids.args_box.children}
-
-
 class TransformationForm(BoxLayout):
     remove_callback = ObjectProperty()
     transformations = TRASNFORMATIONS.keys()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.selected_transform: str = None
+        self.selected_transformation_name: str = None
         self.arg_values = {}
 
     def shift_up(self):
@@ -213,24 +183,25 @@ class TransformationForm(BoxLayout):
         parent.add_widget(self, max(self_index - 1, 0))
 
     def select_transformation(self, transform_name):
-        self.selected_transform = transform_name
+        self.selected_transformation_name = transform_name
         self.ids.args_box.clear_widgets()
 
     def open_parameter_popup(self):
         TransformationParameterPopup(
-            TRASNFORMATIONS[self.selected_transform].arguments,
-            title=f"Edit {self.selected_transform} parameters",
+            self.selected_transformation_name,
+            TRASNFORMATIONS[self.selected_transformation_name].arguments,
+            title=f"Edit {self.selected_transformation_name} parameters",
             save_callback=self.update_arg_values,
         ).open()
 
     def update_arg_values(self, arg_values: dict):
         self.arg_values = arg_values
-        logger.debug(f"Arguments for {self.selected_transform} updated to {arg_values}")
+        logger.debug(f"Arguments for {self.selected_transformation_name} updated to {arg_values}")
 
     def get_selected_tranform(self):
-        if self.selected_transform is None:
+        if self.selected_transformation_name is None:
             return None
-        return self.selected_transform, self.arg_values
+        return self.selected_transformation_name, self.arg_values
 
     def load_args_dict(self, args_dict: dict):
         self.arg_values = args_dict
@@ -239,16 +210,16 @@ class TransformationForm(BoxLayout):
         self.remove_callback(self)
 
     def get_state(self):
-        if self.selected_transform is None:
+        if self.selected_transformation_name is None:
             return None
-        return {"transform_name": self.selected_transform, "args": self.arg_values}
+        return {"transform_name": self.selected_transformation_name, "args": self.arg_values}
 
     def load_state(self, state):
         logger.debug(f"TransformationForm ({id(self)}): loading state {state}")
         if state is None:
             return
 
-        self.selected_transform = state["transform_name"]
+        self.selected_transformation_name = state["transform_name"]
         self.ids.spinner.text = state["transform_name"]
         self.load_args_dict(state["args"])
 

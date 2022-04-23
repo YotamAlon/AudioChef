@@ -37,6 +37,9 @@ class ValidatedInput(BoxLayout):
     validated = BooleanProperty()
     initial = StringProperty()
 
+    def on_kv_post(self, base_widget):
+        self.text = self.initial
+
     def on_text(self, instance, pos):
         try:
             if self.validate(self.text) is False:
@@ -67,17 +70,23 @@ class OptionsBox(ValidatedInput):
         return text.lower() in self.options
 
 
-class ArgumentBox(ValidatedInput):
-    type = ObjectProperty()
+class FileArgumentBox(ValidatedInput):
+    def validate(self, text):
+        return os.path.exists(text)
+
+
+class FloatArgumentBox(ValidatedInput):
+    transformation_name = StringProperty()
     min = NumericProperty()
     max = NumericProperty()
     step = NumericProperty()
 
-    def on_kv_post(self, base_widget):
-        self.text = self.initial
-
     def validate(self, text):
-        self.type(text)
+        try:
+            float(text)
+            return True
+        except ValueError:
+            return False
 
 
 class ConfigurationFile:
