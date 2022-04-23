@@ -6,6 +6,8 @@ from datetime import datetime
 
 from kivy.app import App
 from kivy.core.window import Window
+from kivy.metrics import MetricsSavin
+from kivy.utils import platform
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -438,6 +440,8 @@ class AudioChefApp(App):
     run_dir = None
     config: configparser.ConfigParser
     state: State = state
+    min_width = 1280
+    min_height = 720
 
     def __init__(self):
         logger.setLevel(self.log_level)
@@ -460,24 +464,45 @@ class AudioChefApp(App):
         logger.debug("Binding dropfile event ...")
         Window.clearcolor = app.window_background_color
         Window.size = (
-            app.config.getint("App Settings", "window_width"),
-            app.config.getint("App Settings", "window_height"),
+            self.config.getfloat("Window", "width"),
+            self.config.getfloat("Window", "height"),
         )
+        Window.minimum_width = self.min_width
+        Window.minimum_height = self.min_height
+        if self.config.has_option('Window', 'top') and self.config.has_option('Window', 'left'):
+            Window.top = self.config.getint('Window', 'top')
+            Window.left = self.config.getint('Window', 'left')
+        Window.bind(on_request_close=self.window_request_close)
         return self.main_widget
 
+    def window_request_close(self, _):
+        # Window.size is automatically adjusted for density, must divide by density when saving size
+        logger.debug('Saving window config before exiting ...')
+        self.config.set('Window', 'width', Window.size[0] / Metrics.density)
+        self.config.set('Window', 'height', Window.size[1] / Metrics.density)
+        self.config.set('Window', 'top', Window.top)
+        self.config.set('Window', 'left', Window.left)
+        self.config.write()
+        return False
+
     def build_config(self, config):
-        config.setdefaults("App Settings", {"window_width": 1280, "window_height": 720})
+        config.setdefaults("Window", {"width": self.min_width, "height": self.min_height})
 
         for transformation_name, transformation in TRASNFORMATIONS.items():
             arguments_dict = {}
             for argument in transformation.arguments:
                 if argument.type is float:
-                    arguments_dict[argument.name] = {
-                        "max": argument.max,
-                        "min": argument.min,
-                        "step": argument.step,
-                    }
+                    arguments_dict[f'{argument.name} max'] = argument.max
+                    arguments_dict[f'{argument.name} min'] = argument.min
+                    arguments_dict[f'{argument.name} step'] = argument.step
             config.setdefaults(transformation_name, arguments_dict)
+
+    def get_application_config(self, defaultpath='%(appdir)s/%(appname)s.ini'):
+        if platform == 'macosx':  # mac will not write into app folder
+            s = '~/.%(appname)s.ini'
+        else:
+            s = defaultpath
+        return super().get_application_config(defaultpath=s)
 
     def change_name(self, old_name: str) -> str:
         return self.main_widget.change_name(old_name)
