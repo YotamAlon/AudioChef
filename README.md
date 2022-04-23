@@ -4,5 +4,6 @@ AudioChef is an automation tool for sound engineers. It is meant to be used for 
 
 // TODO:
 * Add ability to customize slider min, max, and step
+* Add a searchable dropdown to output format selector
 * Successfully build for mac
 * Add borders around the main boxes
