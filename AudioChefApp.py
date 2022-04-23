@@ -1,4 +1,5 @@
 import configparser
+import json
 import os
 import traceback
 import uuid
@@ -7,6 +8,7 @@ from datetime import datetime
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.metrics import Metrics
+from kivy.uix.settings import SettingsWithSidebar
 from kivy.utils import platform
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
@@ -35,8 +37,8 @@ logger = logging.getLogger("audiochef")
 
 class FileList(GridLayout):
     def __init__(self, **kwargs):
-        state.set_prop('selected_files', [])
-        state.set_prop('file_widget_map', {})
+        state.set_prop("selected_files", [])
+        state.set_prop("file_widget_map", {})
         super().__init__(**kwargs)
 
     def on_kv_post(self, base_widget):
@@ -48,8 +50,8 @@ class FileList(GridLayout):
     def add_file(self, window, filename: bytes):
         filename = filename.decode()
         audio_file = AudioFile(filename)
-        selected_files = state.get_prop('selected_files')
-        file_widget_map = state.get_prop('file_widget_map')
+        selected_files = state.get_prop("selected_files")
+        file_widget_map = state.get_prop("file_widget_map")
 
         if audio_file not in selected_files:
             selected_files.append(audio_file)
@@ -72,30 +74,32 @@ class FileList(GridLayout):
                 remove_button,
             )
 
-        state.set_prop('selected_files', selected_files)
-        state.set_prop('file_widget_map', file_widget_map)
+        state.set_prop("selected_files", selected_files)
+        state.set_prop("file_widget_map", file_widget_map)
 
     def remove_file(self, file: AudioFile):
-        selected_files = state.get_prop('selected_files')
-        file_widget_map = state.get_prop('file_widget_map')
+        selected_files = state.get_prop("selected_files")
+        file_widget_map = state.get_prop("file_widget_map")
 
         for widget in file_widget_map[file.filename]:
             self.remove_widget(widget)
         del file_widget_map[file.filename]
         selected_files.remove(file)
 
-        state.set_prop('selected_files', selected_files)
-        state.set_prop('file_widget_map', file_widget_map)
+        state.set_prop("selected_files", selected_files)
+        state.set_prop("file_widget_map", file_widget_map)
 
     def clear_files(self, *args, **kwargs):
-        for file in state.get_prop('selected_files')[:]:
+        for file in state.get_prop("selected_files")[:]:
             self.remove_file(file)
 
     def update_filenames(self, *args, **kwargs):
-        selected_files = state.get_prop('selected_files')
-        file_widget_map = state.get_prop('file_widget_map')
+        selected_files = state.get_prop("selected_files")
+        file_widget_map = state.get_prop("file_widget_map")
         for audio_file in selected_files:
-            file_widget_map[audio_file.filename][1].text = self.get_output_filename(audio_file.filename)
+            file_widget_map[audio_file.filename][1].text = self.get_output_filename(
+                audio_file.filename
+            )
 
     def get_output_filename(self, filename):
         name, ext = os.path.splitext(filename)
@@ -110,7 +114,7 @@ class FileList(GridLayout):
         return os.path.join(path, app.change_name(filename))
 
     def get_output_ext(self, ext):
-        output_ext = state.get_prop('output_ext')
+        output_ext = state.get_prop("output_ext")
         return "." + (output_ext or ext[1:])
 
 
@@ -311,7 +315,7 @@ class AudioChefWindow(BoxLayout):
 
             transformations = self.get_transformations()
             self.check_selected_transformation(transformations)
-            selected_files = state.get_prop('selected_files')
+            selected_files = state.get_prop("selected_files")
             for audio_file in selected_files:
                 outfile_name = self.get_output_name(audio_file.source_name)
                 outfile_ext = self.get_output_ext(audio_file.source_ext)
@@ -344,7 +348,7 @@ class AudioChefWindow(BoxLayout):
     def save_preset(self):
         preset = {
             "name": str(uuid.uuid4()),
-            "ext": state.get_prop('output_ext'),
+            "ext": state.get_prop("output_ext"),
             "transformations": [
                 child.get_state() for child in self.transforms_box.children[::-1]
             ],
@@ -386,7 +390,7 @@ class AudioChefWindow(BoxLayout):
         self.presets_file.set_presets(presets)
 
     def check_input_file_formats(self):
-        selected_files = state.get_prop('selected_files')
+        selected_files = state.get_prop("selected_files")
         for audio_file in selected_files:
             name, ext = os.path.splitext(audio_file.filename)
 
@@ -430,7 +434,9 @@ class AudioChefWindow(BoxLayout):
 
 
 class AudioChefApp(App):
-    version = "0.1"
+    version = "0.3"
+    settings_cls = SettingsWithSidebar
+    use_kivy_settings = False
     icon = "assets/chef_hat.png"
     window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
     main_color = (43 / 255, 130 / 255, 229 / 255)
@@ -469,40 +475,88 @@ class AudioChefApp(App):
         )
         Window.minimum_width = self.min_width
         Window.minimum_height = self.min_height
-        if self.config.has_option('Window', 'top') and self.config.has_option('Window', 'left'):
-            Window.top = self.config.getint('Window', 'top')
-            Window.left = self.config.getint('Window', 'left')
+        if self.config.has_option("Window", "top") and self.config.has_option(
+            "Window", "left"
+        ):
+            Window.top = self.config.getint("Window", "top")
+            Window.left = self.config.getint("Window", "left")
         Window.bind(on_request_close=self.window_request_close)
         return self.main_widget
 
     def window_request_close(self, _):
         # Window.size is automatically adjusted for density, must divide by density when saving size
-        logger.debug('Saving window config before exiting ...')
-        self.config.set('Window', 'width', Window.size[0] / Metrics.density)
-        self.config.set('Window', 'height', Window.size[1] / Metrics.density)
-        self.config.set('Window', 'top', Window.top)
-        self.config.set('Window', 'left', Window.left)
+        logger.debug("Saving window config before exiting ...")
+        self.config.set("Window", "width", Window.size[0] / Metrics.density)
+        self.config.set("Window", "height", Window.size[1] / Metrics.density)
+        self.config.set("Window", "top", Window.top)
+        self.config.set("Window", "left", Window.left)
         self.config.write()
         return False
 
     def build_config(self, config):
-        config.setdefaults("Window", {"width": self.min_width, "height": self.min_height})
+        config.setdefaults(
+            "Window", {"width": self.min_width, "height": self.min_height}
+        )
 
         for transformation_name, transformation in TRASNFORMATIONS.items():
             arguments_dict = {}
             for argument in transformation.arguments:
                 if argument.type is float:
-                    arguments_dict[f'{argument.name} max'] = argument.max
-                    arguments_dict[f'{argument.name} min'] = argument.min
-                    arguments_dict[f'{argument.name} step'] = argument.step
+                    arguments_dict[f"{argument.name} max"] = argument.max
+                    arguments_dict[f"{argument.name} min"] = argument.min
+                    arguments_dict[f"{argument.name} step"] = argument.step
             config.setdefaults(transformation_name, arguments_dict)
 
-    def get_application_config(self, defaultpath='%(appdir)s/%(appname)s.ini'):
-        if platform == 'macosx':  # mac will not write into app folder
-            s = '~/.%(appname)s.ini'
+    def get_application_config(self, defaultpath="%(appdir)s/%(appname)s.ini"):
+        if platform == "macosx":  # mac will not write into app folder
+            s = "~/.%(appname)s.ini"
         else:
             s = defaultpath
         return super().get_application_config(defaultpath=s)
+
+    def build_settings(self, settings):
+        base_setting_template = {
+            "type": "numeric",
+            "title": "",
+            "desc": "",
+            "section": "",
+            "key": "",
+        }
+
+        for transformation_name, transformation in TRASNFORMATIONS.items():
+            arguments_list = []
+            for argument in transformation.arguments:
+                if argument.type is float:
+                    arguments_list.append(
+                        {
+                            "type": "numeric",
+                            "title": f"{argument.name} Max",
+                            "desc": f"The maximum value to use for the slider of {argument.name} for {transformation_name}",
+                            "section": transformation_name,
+                            "key": f"{argument.name} max",
+                        }
+                    )
+                    arguments_list.append(
+                        {
+                            "type": "numeric",
+                            "title": f"{argument.name} Min",
+                            "desc": f"The minimum value to use for the slider of {argument.name} for {transformation_name}",
+                            "section": transformation_name,
+                            "key": f"{argument.name} min",
+                        }
+                    )
+                    arguments_list.append(
+                        {
+                            "type": "numeric",
+                            "title": f"{argument.name} Step",
+                            "desc": f"The step size to use for the slider of {argument.name} for {transformation_name}",
+                            "section": transformation_name,
+                            "key": f"{argument.name} step",
+                        }
+                    )
+            settings.add_json_panel(
+                transformation_name, self.config, data=json.dumps(arguments_list)
+            )
 
     def change_name(self, old_name: str) -> str:
         return self.main_widget.change_name(old_name)
@@ -511,7 +565,7 @@ class AudioChefApp(App):
         pass
 
     def on_add_transform_item(self, *args, **kwargs):
-        if hasattr(self, 'main_widget'):
+        if hasattr(self, "main_widget"):
             self.main_widget.add_tranform_item()
 
     def on_name_changer_update(self, *args, **kwargs):

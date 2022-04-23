@@ -15,3 +15,12 @@
     title_color: (0., 0., 0., 1.)
     background: 'atlas://assets/audiochef_theme/modalview-background'
     background_color: app.window_background_color
+
+
+<SettingsWithSidebar>:
+    canvas.before:
+		Color:
+			rgba: app.window_background_color
+		Rectangle:
+			pos: self.pos
+			size: self.size

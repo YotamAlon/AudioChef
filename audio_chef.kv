@@ -29,10 +29,17 @@
         BoxLayout:
             orientation: 'vertical'
             size_hint_x: .50
-            Label:
-                text: 'Presets'
+            BoxLayout:
+                orientation: 'horizontal'
                 size_hint_y: None
                 height: 50
+                Label:
+                    text: 'Presets'
+                Button:
+                    text: 'Configure app (or press F1)'
+                    on_release: app.open_settings()
+                    size_hint_x: None
+                    width: 240
             BoxLayout:
                 id: presets_box
                 orientation: 'vertical'
