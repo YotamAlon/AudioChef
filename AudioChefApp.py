@@ -6,7 +6,7 @@ from datetime import datetime
 
 from kivy.app import App
 from kivy.core.window import Window
-from kivy.metrics import MetricsSavin
+from kivy.metrics import Metrics
 from kivy.utils import platform
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
