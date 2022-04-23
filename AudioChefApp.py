@@ -9,6 +9,7 @@ from kivy.core.window import Window
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
@@ -25,8 +26,90 @@ from helper_classes import (
 from kivy_helpers import toggle_widget
 import logging
 from transformations import TRASNFORMATIONS
+from state import state, State
 
 logger = logging.getLogger("audiochef")
+
+
+class FileList(GridLayout):
+    def __init__(self, **kwargs):
+        state.set_prop('selected_files', [])
+        state.set_prop('file_widget_map', {})
+        super().__init__(**kwargs)
+
+    def on_kv_post(self, base_widget):
+        Window.bind(on_dropfile=self.add_file)
+        app.bind(on_clear_files=self.clear_files)
+        app.bind(on_name_changer_update=self.update_filenames)
+        app.bind(on_output_format_update=self.update_filenames)
+
+    def add_file(self, window, filename: bytes):
+        filename = filename.decode()
+        audio_file = AudioFile(filename)
+        selected_files = state.get_prop('selected_files')
+        file_widget_map = state.get_prop('file_widget_map')
+
+        if audio_file not in selected_files:
+            selected_files.append(audio_file)
+            file_label = Label(text=audio_file.filename)
+            self.add_widget(file_label)
+
+            preview_label = Label(text=self.get_output_filename(audio_file.filename))
+            self.add_widget(preview_label)
+
+            remove_button = Button(
+                text="-",
+                width=50,
+                size_hint_x=None,
+                on_release=lambda x: self.remove_file(audio_file),
+            )
+            self.add_widget(remove_button)
+            file_widget_map[audio_file.filename] = (
+                file_label,
+                preview_label,
+                remove_button,
+            )
+
+        state.set_prop('selected_files', selected_files)
+        state.set_prop('file_widget_map', file_widget_map)
+
+    def remove_file(self, file: AudioFile):
+        selected_files = state.get_prop('selected_files')
+        file_widget_map = state.get_prop('file_widget_map')
+
+        for widget in file_widget_map[file.filename]:
+            self.remove_widget(widget)
+        del file_widget_map[file.filename]
+        selected_files.remove(file)
+
+        state.set_prop('selected_files', selected_files)
+        state.set_prop('file_widget_map', file_widget_map)
+
+    def clear_files(self, *args, **kwargs):
+        for file in state.get_prop('selected_files')[:]:
+            self.remove_file(file)
+
+    def update_filenames(self, *args, **kwargs):
+        selected_files = state.get_prop('selected_files')
+        file_widget_map = state.get_prop('file_widget_map')
+        for audio_file in selected_files:
+            file_widget_map[audio_file.filename][1].text = self.get_output_filename(audio_file.filename)
+
+    def get_output_filename(self, filename):
+        name, ext = os.path.splitext(filename)
+        if ext.strip(".") not in [
+            format_.ext for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode
+        ]:
+            return "This file format is not supported"
+        return self.get_output_name(name) + self.get_output_ext(ext)
+
+    def get_output_name(self, name):
+        path, filename = os.path.split(name)
+        return os.path.join(path, app.change_name(filename))
+
+    def get_output_ext(self, ext):
+        output_ext = state.get_prop('output_ext')
+        return "." + (output_ext or ext[1:])
 
 
 class OutputChanger(BoxLayout):
@@ -179,8 +262,6 @@ class AudioChefWindow(BoxLayout):
         self.presets_file = ConfigurationFile()
         self.presets_file.initialize(TRASNFORMATIONS)
         self.selected_transformations = []
-        self.selected_files = []
-        self.file_widget_map = {}
         super().__init__(**kwargs)
         logger.debug("Initialization of AudioChef main window completed.")
 
@@ -203,10 +284,8 @@ class AudioChefWindow(BoxLayout):
         if default_preset_id:
             self.load_preset(default_preset_id)
 
-        app.bind(on_clear_files=self.clear_files)
-        app.bind(on_add_transform_item=self.add_tranform_item)
-        app.bind(on_name_changer_update=self.filename_preview)
-        app.bind(on_output_format_update=self.filename_preview)
+    def change_name(self, old_name: str) -> str:
+        return self.name_changer.change_name(old_name)
 
     def reload_presets(self, presets):
         self.presets_box.clear_widgets()
@@ -223,40 +302,6 @@ class AudioChefWindow(BoxLayout):
                 )
             )
 
-    def on_dropfile(self, window, filename: bytes):
-        filename = filename.decode()
-        audio_file = AudioFile(filename)
-        if audio_file not in self.selected_files:
-            self.selected_files.append(audio_file)
-            file_label = Label(text=audio_file.filename)
-            self.file_box.add_widget(file_label)
-
-            preview_label = Label(text=self.get_output_filename(audio_file.filename))
-            self.file_box.add_widget(preview_label)
-
-            remove_button = Button(
-                text="-",
-                width=50,
-                size_hint_x=None,
-                on_release=lambda x: self.remove_file(audio_file),
-            )
-            self.file_box.add_widget(remove_button)
-            self.file_widget_map[audio_file.filename] = (
-                file_label,
-                preview_label,
-                remove_button,
-            )
-
-    def remove_file(self, file: AudioFile):
-        for widget in self.file_widget_map[file.filename]:
-            self.file_box.remove_widget(widget)
-        del self.file_widget_map[file.filename]
-        self.selected_files.remove(file)
-
-    def clear_files(self, button):
-        for file in self.selected_files[:]:
-            self.remove_file(file)
-
     def execute_preset(self):
         try:
             self.check_input_file_formats()
@@ -264,7 +309,8 @@ class AudioChefWindow(BoxLayout):
 
             transformations = self.get_transformations()
             self.check_selected_transformation(transformations)
-            for audio_file in self.selected_files:
+            selected_files = state.get_prop('selected_files')
+            for audio_file in selected_files:
                 outfile_name = self.get_output_name(audio_file.source_name)
                 outfile_ext = self.get_output_ext(audio_file.source_ext)
 
@@ -296,7 +342,7 @@ class AudioChefWindow(BoxLayout):
     def save_preset(self):
         preset = {
             "name": str(uuid.uuid4()),
-            "ext": self.ext_box.text,
+            "ext": state.get_prop('output_ext'),
             "transformations": [
                 child.get_state() for child in self.transforms_box.children[::-1]
             ],
@@ -315,7 +361,7 @@ class AudioChefWindow(BoxLayout):
         if not self.transforms_locked:
             self.transforms_box.clear_widgets()
             for transform_state in preset["transformations"]:
-                self.add_tranform_item(None)
+                self.add_tranform_item()
                 logger.debug(self.transforms_box.children)
                 self.transforms_box.children[0].load_state(transform_state)
 
@@ -338,7 +384,8 @@ class AudioChefWindow(BoxLayout):
         self.presets_file.set_presets(presets)
 
     def check_input_file_formats(self):
-        for audio_file in self.selected_files:
+        selected_files = state.get_prop('selected_files')
+        for audio_file in selected_files:
             name, ext = os.path.splitext(audio_file.filename)
 
             if ext.lower()[1:] not in [
@@ -371,34 +418,13 @@ class AudioChefWindow(BoxLayout):
             sample_rate=sample_rate,
         )
 
-    def get_output_filename(self, filename):
-        name, ext = os.path.splitext(filename)
-        if ext.strip(".") not in [
-            format_.ext for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode
-        ]:
-            return "This file format is not supported"
-        return self.get_output_name(name) + self.get_output_ext(ext)
-
-    def get_output_name(self, name):
-        path, filename = os.path.split(name)
-        return os.path.join(path, self.name_changer.change_name(filename))
-
-    def get_output_ext(self, ext):
-        return "." + (self.ext_box.text or ext[1:])
-
-    def add_tranform_item(self, button):
+    def add_tranform_item(self):
         self.transforms_box.add_widget(
             TransformationForm(remove_callback=self.remove_transformation)
         )
 
     def remove_transformation(self, accordion_item):
         self.transforms_box.remove_widget(accordion_item)
-
-    def filename_preview(self, button):
-        for audio_file in self.selected_files:
-            self.file_widget_map[audio_file.filename][
-                1
-            ].text = self.get_output_filename(audio_file.filename)
 
 
 class AudioChefApp(App):
@@ -411,6 +437,7 @@ class AudioChefApp(App):
     log_level = logging.INFO
     run_dir = None
     config: configparser.ConfigParser
+    state: State = state
 
     def __init__(self):
         logger.setLevel(self.log_level)
@@ -428,16 +455,15 @@ class AudioChefApp(App):
 
         logger.info("Loading audio formats ...")
         load_audio_formats()
-        main_widget = AudioChefWindow()
+        self.main_widget = AudioChefWindow()
 
         logger.debug("Binding dropfile event ...")
-        Window.bind(on_dropfile=main_widget.on_dropfile)
         Window.clearcolor = app.window_background_color
         Window.size = (
             app.config.getint("App Settings", "window_width"),
             app.config.getint("App Settings", "window_height"),
         )
-        return main_widget
+        return self.main_widget
 
     def build_config(self, config):
         config.setdefaults("App Settings", {"window_width": 1280, "window_height": 720})
@@ -453,16 +479,20 @@ class AudioChefApp(App):
                     }
             config.setdefaults(transformation_name, arguments_dict)
 
-    def on_clear_files(self):
+    def change_name(self, old_name: str) -> str:
+        return self.main_widget.change_name(old_name)
+
+    def on_clear_files(self, *args, **kwargs):
         pass
 
-    def on_add_transform_item(self):
+    def on_add_transform_item(self, *args, **kwargs):
+        if hasattr(self, 'main_widget'):
+            self.main_widget.add_tranform_item()
+
+    def on_name_changer_update(self, *args, **kwargs):
         pass
 
-    def on_name_changer_update(self):
-        pass
-
-    def on_output_format_update(self):
+    def on_output_format_update(self, *args, **kwargs):
         pass
 
 

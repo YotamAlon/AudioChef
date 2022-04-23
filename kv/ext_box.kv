@@ -19,4 +19,4 @@
         id: ext_box
         size_hint_y: None
         height: 30
-        on_text: app.dispatch('on_output_format_update')
+        on_text: app.state.set_prop('output_ext', self.text); app.dispatch('on_output_format_update')

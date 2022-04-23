@@ -40,7 +40,7 @@ class FFMPEGAudioFormatter(AudioFormatter):
 
 
 class AudioFile:
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         self.filename = filename
         name, ext = os.path.splitext(filename)
         self.source_name = name
