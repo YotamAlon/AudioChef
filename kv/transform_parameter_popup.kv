@@ -1,0 +1,31 @@
+<TransformationParameterPopup>:
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            BoxLayout:
+                id: args_box
+                size_hint_y: None
+                orientation: 'vertical'
+        BoxLayout:
+            height: 50
+            size_hint_y: None
+            orientation: 'horizontal'
+            Button:
+                text: 'Save'
+                on_release: root.save_callback(root.get_argument_dict()); root.dismiss()
+            Button:
+                text: 'Cancel'
+                on_release: root.dismiss()
+
+
+
+<ArgumentBox>:
+    width: 240
+    size_hint_x: None
+    Slider:
+        id: slider
+        min: 0
+        max: 100
+        value: root.text if root.text.replace('.', '', 1).isdigit() else self.min
+        on_touch_move: root.text = str(self.value)
+        step: 10

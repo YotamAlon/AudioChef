@@ -1,0 +1,44 @@
+<SelectableButton>:
+    width: max(120, self.texture_size[0])
+    size_hint_x: None
+    color: (1, 1, 1, 1) if self.selected else app.main_color
+    background_color: app.main_color if self.selected else (1, 1, 1, 1)
+
+
+<PresetButton>:
+    size_hint_y: None
+    pos_hint_y: 0
+    height: 50
+    TextInput:
+        text: root.preset_name
+        on_text: root.rename_preset(root.preset_name, self.text)
+    Button:
+        text: 'Load'
+        on_release: root.load_preset(root.preset_id)
+    Label:
+        text: 'Default:'
+    CheckBox:
+        group: 'default_preset'
+        active: root.default
+        on_active: root.make_default(root.preset_name, self.active)
+    Button:
+        width: 50
+        size_hint_x: None
+        text: '-'
+        on_release: root.remove_preset(root.preset_name)
+
+
+<ValidatedInput>:
+    text: text_input.text
+    size_hint_y: None
+    height: max(input_label.height, text_input.height)
+    Label:
+        id: input_label
+        text: root.name
+        height: max(25, self.texture_size[1])
+        width: self.texture_size[0] + 10
+        size_hint: None, None
+    TextInput:
+        id: text_input
+        text: root.text
+        height: self.minimum_height

@@ -1,0 +1,22 @@
+<ExtBox@BoxLayout>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: 80
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        Label:
+            text: 'Output Format'
+        SelectableButton:
+            selected: True
+            text: 'Lock'
+            on_release:
+                self.selected = not self.selected
+                root.locked = not self.selected
+                self.text = 'Lock' if self.selected else 'Unlock'
+    OptionsBox:
+        id: ext_box
+        size_hint_y: None
+        height: 30
+        on_text: app.dispatch('on_output_format_update')

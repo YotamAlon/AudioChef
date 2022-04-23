@@ -1,0 +1,69 @@
+<TransformsBox@BoxLayout>:
+    orientation: 'vertical'
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        Label:
+            text: 'Transformations'
+        SelectableButton:
+            selected: True
+            text: 'Lock'
+            on_release:
+                self.selected = not self.selected
+                root.locked = not self.selected
+                self.text = 'Lock' if self.selected else 'Unlock'
+    BoxLayout:
+        orientation: 'vertical'
+        pos_hint: {'top': 1}
+        BoxLayout:
+            height: 25
+            size_hint_y: None
+            Label:
+                text: "Added transformations:"
+            Button:
+                text: '+'
+                on_release: app.dispatch('on_add_transform_item')
+        BoxLayout:
+            orientation: 'vertical'
+            ScrollView:
+                BoxLayout:
+                    id: transforms_box
+                    orientation: 'vertical'
+                    height: 50 * len(self.children)
+                    size_hint_y: None
+
+
+<TransformationForm>:
+    height: 50
+    size_hint_y: None
+    BoxLayout:
+        orientation: 'vertical'
+        width: 50
+        size_hint_x: None
+        Button:
+            text: '^'
+            on_release: root.shift_up()
+        Button:
+            text: 'v'
+            on_release: root.shift_down()
+
+    Spinner:
+        id: spinner
+        width: 200
+        size_hint_x: None
+        text: 'Choose a tranformation:'
+        values: root.transformations
+        on_text: root.select_transformation(self.text)
+    Button:
+        text: "Edit parameters"
+        on_release: root.open_parameter_popup()
+    ScrollView:
+        BoxLayout:
+            id: args_box
+            size_hint_x: None
+    Button:
+        width: 100
+        size_hint_x: None
+        text: 'remove'
+        on_release: root.remove()

@@ -182,14 +182,6 @@ class AudioChefWindow(BoxLayout):
         self.selected_files = []
         self.file_widget_map = {}
         super().__init__(**kwargs)
-
-        logger.debug("Binding dropfile event ...")
-        Window.bind(on_dropfile=self.on_dropfile)
-        Window.clearcolor = app.window_background_color
-        Window.size = (
-            app.config.getint("App Settings", "window_width"),
-            app.config.getint("App Settings", "window_height"),
-        )
         logger.debug("Initialization of AudioChef main window completed.")
 
     def on_kv_post(self, base_widget):
@@ -436,7 +428,16 @@ class AudioChefApp(App):
 
         logger.info("Loading audio formats ...")
         load_audio_formats()
-        return AudioChefWindow()
+        main_widget = AudioChefWindow()
+
+        logger.debug("Binding dropfile event ...")
+        Window.bind(on_dropfile=main_widget.on_dropfile)
+        Window.clearcolor = app.window_background_color
+        Window.size = (
+            app.config.getint("App Settings", "window_width"),
+            app.config.getint("App Settings", "window_height"),
+        )
+        return main_widget
 
     def build_config(self, config):
         config.setdefaults("App Settings", {"window_width": 1280, "window_height": 720})
