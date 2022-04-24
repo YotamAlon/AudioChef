@@ -1,13 +1,12 @@
 <ExtBox@BoxLayout>:
     orientation: 'vertical'
     size_hint_y: None
-    height: 80
+    height: 30
     BoxLayout:
         orientation: 'horizontal'
-        size_hint_y: None
-        height: 50
-        Label:
-            text: 'Output Format'
+        OptionsBox:
+            id: ext_box
+            on_text: app.state.set_prop('output_ext', self.text); app.dispatch('on_output_format_update')
         SelectableButton:
             selected: True
             text: 'Lock'
@@ -15,8 +14,3 @@
                 self.selected = not self.selected
                 root.locked = not self.selected
                 self.text = 'Lock' if self.selected else 'Unlock'
-    OptionsBox:
-        id: ext_box
-        size_hint_y: None
-        height: 30
-        on_text: app.state.set_prop('output_ext', self.text); app.dispatch('on_output_format_update')

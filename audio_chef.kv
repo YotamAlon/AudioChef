@@ -32,7 +32,7 @@
             BoxLayout:
                 orientation: 'horizontal'
                 size_hint_y: None
-                height: 50
+                height: 40
                 Label:
                     text: 'Presets'
                 Button:
@@ -45,31 +45,27 @@
                 orientation: 'vertical'
         BoxLayout:
             orientation: 'vertical'
-            Label:
-                text: 'Current preset'
+            BoxLayout:
+                height: 40
                 size_hint_y: None
-                height: 50
+                Label:
+                    text: 'Current preset'
+                Button:
+                    text: 'Save Preset'
+                    on_release: root.save_preset()
+                Button:
+                    text: "Execute Preset"
+                    on_release: root.execute_preset()
             BoxLayout:
                 orientation: 'vertical'
-                BoxLayout:
-                    height: 40
-                    size_hint_y: None
-                    Button:
-                        text: 'Save Preset'
-                        on_release: root.save_preset()
-                    Button:
-                        text: "Execute Preset"
-                        on_release: root.execute_preset()
-                BoxLayout:
-                    orientation: 'vertical'
-                    ExtBox:
-                        id: ext_item
-                        locked: bool(root.ext_locked)
-                    NameBox:
-                        id: name_item
-                        locked: bool(root.name_locked)
-                    TransformsBox:
-                        id: transforms_item
-                        locked: bool(root.transforms_locked)
-                    FilesBox:
-                        id: file_item
+                ExtBox:
+                    id: ext_item
+                    locked: bool(root.ext_locked)
+                NameBox:
+                    id: name_item
+                    locked: bool(root.name_locked)
+                TransformsBox:
+                    id: transforms_item
+                    locked: bool(root.transforms_locked)
+                FilesBox:
+                    id: file_item
