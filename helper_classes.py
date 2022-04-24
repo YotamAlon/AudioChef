@@ -71,8 +71,8 @@ class OptionsBox(ValidatedInput):
     options = ListProperty()
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         self.dropdown = DropDown()
+        super().__init__(**kwargs)
 
     def on_kv_post(self, base_widget):
         for option in self.options:
@@ -95,7 +95,7 @@ class OptionsBox(ValidatedInput):
 
     def create_option_button(self, option):
         option_button = Button(text=option, size_hint_y=None, height=44)
-        option_button.bind(on_release=lambda: self.dropdown.select(option))
+        option_button.bind(on_release=lambda _: self.dropdown.select(option))
         return option_button
 
     def validate(self, text):
