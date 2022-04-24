@@ -8,6 +8,7 @@ from datetime import datetime
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.metrics import Metrics
+from kivy.config import Config
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.utils import platform
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
@@ -454,7 +455,7 @@ class AudioChefApp(App):
         Window.bind(on_request_close=self.window_request_close)
         return self.main_widget
 
-    def window_request_close(self, _):
+    def window_request_close(self, *args, **kwargs):
         # Window.size is automatically adjusted for density, must divide by density when saving size
         logger.debug("Saving window config before exiting ...")
         self.config.set("Window", "width", Window.size[0] / Metrics.density)
@@ -465,6 +466,7 @@ class AudioChefApp(App):
         return False
 
     def build_config(self, config):
+        Config.set('input', 'mouse', 'mouse,disable_multitouch')
         config.setdefaults(
             "Window", {"width": self.min_width, "height": self.min_height}
         )
