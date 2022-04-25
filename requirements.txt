@@ -3,3 +3,4 @@ pydub
 soundfile
 pedalboard
 pyinstaller
+peewee
