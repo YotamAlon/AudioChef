@@ -16,86 +16,21 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 from pedalboard import Pedalboard
-
-from TransformationParameterPopup import TransformationParameterPopup
-from audio_formats import load_audio_formats, SUPPORTED_AUDIO_FORMATS
-from helper_classes import (
+from components.NameChanger import NameChanger
+from components.TransformationForm import TransformationForm
+from utils.audio_formats import load_audio_formats, SUPPORTED_AUDIO_FORMATS
+from components.helper_classes import (
     OptionsBox,
     ConfigurationFile,
     PresetButton,
     UnexecutableRecipeError,
 )
 import logging
-from transformations import TRASNFORMATIONS
-from state import state, State
-from Dispatcher import dispatcher
-from Files import FileList
-from NameChanger import NameChanger
+from utils.transformations import TRASNFORMATIONS
+from utils.State import state, State
+from utils.Dispatcher import dispatcher
 
 logger = logging.getLogger("audiochef")
-
-
-class TransformationForm(BoxLayout):
-    remove_callback = ObjectProperty()
-    transformations = TRASNFORMATIONS.keys()
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.selected_transformation_name: str = None
-        self.arg_values = {}
-
-    def shift_up(self):
-        self_index = self.parent.children.index(self)
-        parent = self.parent
-        parent.remove_widget(self)
-        parent.add_widget(self, self_index + 1)
-
-    def shift_down(self):
-        self_index = self.parent.children.index(self)
-        parent = self.parent
-        parent.remove_widget(self)
-        parent.add_widget(self, max(self_index - 1, 0))
-
-    def select_transformation(self, transform_name):
-        self.selected_transformation_name = transform_name
-        self.ids.args_box.clear_widgets()
-
-    def open_parameter_popup(self):
-        TransformationParameterPopup(
-            self.selected_transformation_name,
-            TRASNFORMATIONS[self.selected_transformation_name].arguments,
-            title=f"Edit {self.selected_transformation_name} parameters",
-            save_callback=self.update_arg_values,
-        ).open()
-
-    def update_arg_values(self, arg_values: dict):
-        self.arg_values = arg_values
-        logger.debug(f"Arguments for {self.selected_transformation_name} updated to {arg_values}")
-
-    def get_selected_tranform(self):
-        if self.selected_transformation_name is None:
-            return None
-        return self.selected_transformation_name, self.arg_values
-
-    def load_args_dict(self, args_dict: dict):
-        self.arg_values = args_dict
-
-    def remove(self):
-        self.remove_callback(self)
-
-    def get_state(self):
-        if self.selected_transformation_name is None:
-            return None
-        return {"transform_name": self.selected_transformation_name, "args": self.arg_values}
-
-    def load_state(self, state):
-        logger.debug(f"TransformationForm ({id(self)}): loading state {state}")
-        if state is None:
-            return
-
-        self.selected_transformation_name = state["transform_name"]
-        self.ids.spinner.text = state["transform_name"]
-        self.load_args_dict(state["args"])
 
 
 class AudioChefWindow(BoxLayout):
@@ -116,15 +51,6 @@ class AudioChefWindow(BoxLayout):
         logger.debug("Initialization of AudioChef main window completed.")
 
     def on_kv_post(self, base_widget):
-        self.ext_box.name = (
-            "Choose the output format (empty means the same as the input if supported)"
-        )
-        self.ext_box.options = [""] + [
-            format_.ext.lower()
-            for format_ in SUPPORTED_AUDIO_FORMATS
-            if format_.can_encode
-        ]
-
         presets = self.presets_file.get_presets()
         self.reload_presets(presets)
         default_preset_id = next(
@@ -290,6 +216,7 @@ class AudioChefApp(App):
     min_width = 1280
     min_height = 720
     dispatcher = dispatcher
+    support_audio_formats = SUPPORTED_AUDIO_FORMATS
 
     def __init__(self):
         logger.setLevel(self.log_level)
@@ -299,7 +226,7 @@ class AudioChefApp(App):
         logger.info("Registering custom events ...")
 
         logger.info("Loading KV file ...")
-        self.load_kv("audio_chef.kv")
+        self.load_kv("../audio_chef.kv")
 
         logger.info("Loading audio formats ...")
         load_audio_formats()

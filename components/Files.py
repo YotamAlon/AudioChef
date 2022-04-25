@@ -3,9 +3,9 @@ from kivy.core.window import Window
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
-from Dispatcher import dispatcher
-from audio_formats import AudioFile, SUPPORTED_AUDIO_FORMATS
-from state import state
+from utils.Dispatcher import dispatcher
+from utils.audio_formats import AudioFile, SUPPORTED_AUDIO_FORMATS
+from utils.State import state
 
 
 class FileList(GridLayout):

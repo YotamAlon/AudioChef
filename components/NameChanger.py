@@ -3,8 +3,8 @@ from datetime import datetime
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 
-from Dispatcher import dispatcher
-from state import state
+from utils.Dispatcher import dispatcher
+from utils.State import state
 from kivy_helpers import toggle_widget
 logger = logging.getLogger("audiochef")
 

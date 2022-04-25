@@ -1,7 +1,7 @@
 import logging
 
 from kivy.uix.popup import Popup
-from helper_classes import FloatArgumentBox, FileArgumentBox, OptionsBox
+from components.helper_classes import FloatArgumentBox, FileArgumentBox, OptionsBox
 from kivy.properties import ObjectProperty
 
 

@@ -122,7 +122,7 @@ class FloatArgumentBox(ValidatedInput):
 
 
 class ConfigurationFile:
-    filename = os.path.join(os.getcwd(), "configuration.db")
+    filename = os.path.join(os.getcwd(), "../configuration.db")
 
     def get_configuration(self) -> dict:
         with open(self.filename, "r") as f:
