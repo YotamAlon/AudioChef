@@ -32,6 +32,7 @@ from kivy_helpers import toggle_widget
 import logging
 from transformations import TRASNFORMATIONS
 from state import state, State
+from Dispatcher import dispatcher
 
 logger = logging.getLogger("audiochef")
 
@@ -39,20 +40,19 @@ logger = logging.getLogger("audiochef")
 class FileList(GridLayout):
     def __init__(self, **kwargs):
         state.set_prop("selected_files", [])
-        state.set_prop("file_widget_map", {})
+        self.file_widget_map = {}
         super().__init__(**kwargs)
 
     def on_kv_post(self, base_widget):
         Window.bind(on_dropfile=self.add_file)
-        app.bind(on_clear_files=self.clear_files)
-        app.bind(on_name_changer_update=self.update_filenames)
-        app.bind(on_output_format_update=self.update_filenames)
+        dispatcher.bind(on_clear_files=self.clear_files)
+        dispatcher.bind(on_name_changer_update=self.update_filenames)
+        dispatcher.bind(on_output_format_update=self.update_filenames)
 
     def add_file(self, window, filename: bytes):
         filename = filename.decode()
         audio_file = AudioFile(filename)
         selected_files = state.get_prop("selected_files")
-        file_widget_map = state.get_prop("file_widget_map")
 
         if audio_file not in selected_files:
             selected_files.append(audio_file)
@@ -69,26 +69,23 @@ class FileList(GridLayout):
                 on_release=lambda x: self.remove_file(audio_file),
             )
             self.add_widget(remove_button)
-            file_widget_map[audio_file.filename] = (
+            self.file_widget_map[audio_file.filename] = (
                 file_label,
                 preview_label,
                 remove_button,
             )
 
         state.set_prop("selected_files", selected_files)
-        state.set_prop("file_widget_map", file_widget_map)
 
     def remove_file(self, file: AudioFile):
         selected_files = state.get_prop("selected_files")
-        file_widget_map = state.get_prop("file_widget_map")
 
-        for widget in file_widget_map[file.filename]:
+        for widget in self.file_widget_map[file.filename]:
             self.remove_widget(widget)
-        del file_widget_map[file.filename]
+        del self.file_widget_map[file.filename]
         selected_files.remove(file)
 
         state.set_prop("selected_files", selected_files)
-        state.set_prop("file_widget_map", file_widget_map)
 
     def clear_files(self, *args, **kwargs):
         for file in state.get_prop("selected_files")[:]:
@@ -96,9 +93,8 @@ class FileList(GridLayout):
 
     def update_filenames(self, *args, **kwargs):
         selected_files = state.get_prop("selected_files")
-        file_widget_map = state.get_prop("file_widget_map")
         for audio_file in selected_files:
-            file_widget_map[audio_file.filename][1].text = self.get_output_filename(
+            self.file_widget_map[audio_file.filename][1].text = self.get_output_filename(
                 audio_file.filename
             )
 
@@ -139,7 +135,7 @@ class OutputChanger(BoxLayout):
 
     def on_mode(self, instance, mode):
         self.switch_widgets()
-        app.dispatch("on_name_changer_update")
+        app.dispatcher.dispatch("on_name_changer_update")
 
     def switch_widgets(self):
         for widget_name in self.ids:
@@ -420,6 +416,7 @@ class AudioChefApp(App):
     state: State = state
     min_width = 1280
     min_height = 720
+    dispatcher = dispatcher
 
     def __init__(self):
         logger.setLevel(self.log_level)
@@ -427,10 +424,6 @@ class AudioChefApp(App):
 
     def build(self):
         logger.info("Registering custom events ...")
-        self.register_event_type("on_clear_files")
-        self.register_event_type("on_add_transform_item")
-        self.register_event_type("on_name_changer_update")
-        self.register_event_type("on_output_format_update")
 
         logger.info("Loading KV file ...")
         self.load_kv("audio_chef.kv")
@@ -438,6 +431,8 @@ class AudioChefApp(App):
         logger.info("Loading audio formats ...")
         load_audio_formats()
         self.main_widget = AudioChefWindow()
+
+        self.dispatcher.bind(on_add_transform_item=self.add_transform_item)
 
         logger.debug("Binding dropfile event ...")
         Window.clearcolor = app.window_background_color
@@ -488,14 +483,6 @@ class AudioChefApp(App):
         return super().get_application_config(defaultpath=s)
 
     def build_settings(self, settings):
-        base_setting_template = {
-            "type": "numeric",
-            "title": "",
-            "desc": "",
-            "section": "",
-            "key": "",
-        }
-
         for transformation_name, transformation in TRASNFORMATIONS.items():
             arguments_list = []
             for argument in transformation.arguments:
@@ -534,18 +521,9 @@ class AudioChefApp(App):
     def change_name(self, old_name: str) -> str:
         return self.main_widget.change_name(old_name)
 
-    def on_clear_files(self, *args, **kwargs):
-        pass
-
-    def on_add_transform_item(self, *args, **kwargs):
+    def add_transform_item(self, *args, **kwargs):
         if hasattr(self, "main_widget"):
             self.main_widget.add_tranform_item()
-
-    def on_name_changer_update(self, *args, **kwargs):
-        pass
-
-    def on_output_format_update(self, *args, **kwargs):
-        pass
 
 
 app = AudioChefApp()

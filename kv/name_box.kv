@@ -61,13 +61,13 @@
                 id: replace_from_input
                 height: 30
                 size_hint_y: None
-                on_text: app.dispatch('on_name_changer_update')
+                on_text: app.dispatcher.dispatch('on_name_changer_update')
             TextInput:
                 id: replace_to_input
                 height: 30
                 size_hint_y: None
                 text: ''
-                on_text: app.dispatch('on_name_changer_update')
+                on_text: app.dispatcher.dispatch('on_name_changer_update')
         BoxLayout:
             orientation: 'vertical'
             Label:
@@ -79,4 +79,4 @@
                 id: wildcards_input
                 height: 30
                 size_hint_y: None
-                on_text: app.dispatch('on_name_changer_update')
+                on_text: app.dispatcher.dispatch('on_name_changer_update')

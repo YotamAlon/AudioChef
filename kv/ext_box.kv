@@ -6,7 +6,7 @@
         orientation: 'horizontal'
         OptionsBox:
             id: ext_box
-            on_text: app.state.set_prop('output_ext', self.text); app.dispatch('on_output_format_update')
+            on_text: app.state.set_prop('output_ext', self.text); app.dispatcher.dispatch('on_output_format_update')
         SelectableButton:
             selected: True
             text: 'Lock'

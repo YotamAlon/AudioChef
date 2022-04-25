@@ -23,7 +23,7 @@
                 text: "Added transformations:"
             Button:
                 text: '+'
-                on_release: app.dispatch('on_add_transform_item')
+                on_release: app.dispatcher.dispatch('on_add_transform_item')
         BoxLayout:
             orientation: 'vertical'
             ScrollView:
