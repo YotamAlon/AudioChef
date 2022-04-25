@@ -3,7 +3,6 @@ import json
 import os
 import traceback
 import uuid
-from datetime import datetime
 
 from kivy.app import App
 from kivy.core.window import Window
@@ -11,151 +10,29 @@ from kivy.metrics import Metrics
 from kivy.config import Config
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.utils import platform
-from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
+from kivy.properties import ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 from pedalboard import Pedalboard
 
 from TransformationParameterPopup import TransformationParameterPopup
-from audio_formats import load_audio_formats, SUPPORTED_AUDIO_FORMATS, AudioFile
+from audio_formats import load_audio_formats, SUPPORTED_AUDIO_FORMATS
 from helper_classes import (
     OptionsBox,
     ConfigurationFile,
     PresetButton,
     UnexecutableRecipeError,
 )
-from kivy_helpers import toggle_widget
 import logging
 from transformations import TRASNFORMATIONS
 from state import state, State
 from Dispatcher import dispatcher
+from Files import FileList
+from NameChanger import NameChanger
 
 logger = logging.getLogger("audiochef")
-
-
-class FileList(GridLayout):
-    def __init__(self, **kwargs):
-        state.set_prop("selected_files", [])
-        self.file_widget_map = {}
-        super().__init__(**kwargs)
-
-    def on_kv_post(self, base_widget):
-        Window.bind(on_dropfile=self.add_file)
-        dispatcher.bind(on_clear_files=self.clear_files)
-        dispatcher.bind(on_name_changer_update=self.update_filenames)
-        dispatcher.bind(on_output_format_update=self.update_filenames)
-
-    def add_file(self, window, filename: bytes):
-        filename = filename.decode()
-        audio_file = AudioFile(filename)
-        selected_files = state.get_prop("selected_files")
-
-        if audio_file not in selected_files:
-            selected_files.append(audio_file)
-            file_label = Label(text=audio_file.filename)
-            self.add_widget(file_label)
-
-            preview_label = Label(text=self.get_output_filename(audio_file.filename))
-            self.add_widget(preview_label)
-
-            remove_button = Button(
-                text="-",
-                width=50,
-                size_hint_x=None,
-                on_release=lambda x: self.remove_file(audio_file),
-            )
-            self.add_widget(remove_button)
-            self.file_widget_map[audio_file.filename] = (
-                file_label,
-                preview_label,
-                remove_button,
-            )
-
-        state.set_prop("selected_files", selected_files)
-
-    def remove_file(self, file: AudioFile):
-        selected_files = state.get_prop("selected_files")
-
-        for widget in self.file_widget_map[file.filename]:
-            self.remove_widget(widget)
-        del self.file_widget_map[file.filename]
-        selected_files.remove(file)
-
-        state.set_prop("selected_files", selected_files)
-
-    def clear_files(self, *args, **kwargs):
-        for file in state.get_prop("selected_files")[:]:
-            self.remove_file(file)
-
-    def update_filenames(self, *args, **kwargs):
-        selected_files = state.get_prop("selected_files")
-        for audio_file in selected_files:
-            self.file_widget_map[audio_file.filename][1].text = self.get_output_filename(
-                audio_file.filename
-            )
-
-    def get_output_filename(self, filename):
-        name, ext = os.path.splitext(filename)
-        if ext.strip(".") not in [
-            format_.ext for format_ in SUPPORTED_AUDIO_FORMATS if format_.can_decode
-        ]:
-            return "This file format is not supported"
-        return self.get_output_name(name) + self.get_output_ext(ext)
-
-    def get_output_name(self, name):
-        path, filename = os.path.split(name)
-        return os.path.join(path, app.change_name(filename))
-
-    def get_output_ext(self, ext):
-        output_ext = state.get_prop("output_ext")
-        return "." + (output_ext or ext[1:])
-
-
-class OutputChanger(BoxLayout):
-    wildcards = ["$item", "$date"]
-    mode = StringProperty("replace")
-    preview_callback = ObjectProperty()
-
-    def change_name(self, old_name: str) -> str:
-        if self.mode == "wildcards":
-            new_name = self.ids.wildcards_input.text
-            new_name = new_name.replace("$item", old_name)
-            new_name = new_name.replace("$date", str(datetime.today()))
-            return new_name
-        else:
-            if self.ids.replace_from_input.text == "":
-                return old_name
-            return old_name.replace(
-                self.ids.replace_from_input.text, self.ids.replace_to_input.text
-            )
-
-    def on_mode(self, instance, mode):
-        self.switch_widgets()
-        app.dispatcher.dispatch("on_name_changer_update")
-
-    def switch_widgets(self):
-        for widget_name in self.ids:
-            hide = not widget_name.startswith(self.mode)
-            toggle_widget(self.ids[widget_name], hide)
-
-    def get_state(self):
-        return {
-            "mode": self.mode,
-            "wildcards_input": self.ids.wildcards_input.text,
-            "replace_from_input": self.ids.replace_from_input.text,
-            "replace_to_input": self.ids.replace_to_input.text,
-        }
-
-    def load_state(self, state):
-        logger.debug(f"OutputChanger: loading state {state}")
-        self.mode = state["mode"]
-        self.ids.wildcards_input.text = state["wildcards_input"]
-        self.ids.replace_from_input.text = state["replace_from_input"]
-        self.ids.replace_to_input.text = state["replace_to_input"]
 
 
 class TransformationForm(BoxLayout):
@@ -222,14 +99,13 @@ class TransformationForm(BoxLayout):
 
 
 class AudioChefWindow(BoxLayout):
-    name_changer: OutputChanger = ObjectProperty()
+    name_changer: NameChanger = ObjectProperty()
     name_locked = BooleanProperty()
     ext_box: OptionsBox = ObjectProperty()
     ext_locked = BooleanProperty()
     transforms_box: Widget = ObjectProperty()
     transforms_locked: BooleanProperty()
     presets_box: Widget = ObjectProperty()
-    file_box: Widget = ObjectProperty()
 
     def __init__(self, **kwargs):
         logger.debug("Starting initialization of AudioChef main window ...")
@@ -257,9 +133,6 @@ class AudioChefWindow(BoxLayout):
         )
         if default_preset_id:
             self.load_preset(default_preset_id)
-
-    def change_name(self, old_name: str) -> str:
-        return self.name_changer.change_name(old_name)
 
     def reload_presets(self, presets):
         self.presets_box.clear_widgets()
