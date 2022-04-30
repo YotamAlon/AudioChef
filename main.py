@@ -10,7 +10,7 @@ kivy.require('2.0.0')
 import asyncio
 import traceback
 import logging.config
-from components.AudioChefApp import app
+from AudioChefApp import app
 from kivy.resources import resource_add_path
 
 LOG_CONFIG = {
