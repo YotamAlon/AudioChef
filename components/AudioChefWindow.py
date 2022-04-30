@@ -2,6 +2,8 @@ import os
 import uuid
 import logging
 import traceback
+from typing import List
+
 from pedalboard import Pedalboard
 
 from kivy.properties import ObjectProperty, BooleanProperty
@@ -10,11 +12,12 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
+from models.Preset import Preset
+
 from components.NameChanger import NameChanger
 from components.TransformationForm import TransformationForm
 from components.helper_classes import (
     OptionsBox,
-    ConfigurationFile,
     PresetButton,
     UnexecutableRecipeError,
 )
@@ -37,30 +40,25 @@ class AudioChefWindow(BoxLayout):
 
     def __init__(self, **kwargs):
         logger.debug("Starting initialization of AudioChef main window ...")
-        self.presets_file = ConfigurationFile()
-        self.presets_file.initialize(TRASNFORMATIONS)
         self.selected_transformations = []
         super().__init__(**kwargs)
         logger.debug("Initialization of AudioChef main window completed.")
 
     def on_kv_post(self, base_widget):
-        presets = self.presets_file.get_presets()
-        self.reload_presets(presets)
-        default_preset_id = next(
-            (i for i, preset in enumerate(presets) if preset.get("default", False)),
-            None,
-        )
+        self.reload_presets()
+        default_preset_id = Preset.get_or_none(Preset.default is True)
         if default_preset_id:
             self.load_preset(default_preset_id)
 
-    def reload_presets(self, presets):
+    def reload_presets(self):
+        presets = Preset.select()
         self.presets_box.clear_widgets()
         for preset in presets:
             self.presets_box.add_widget(
                 PresetButton(
-                    preset_id=preset.get("order", 0),
-                    preset_name=preset["name"],
-                    default=preset.get("default", False),
+                    preset_id=preset.id,
+                    preset_name=preset.name,
+                    default=preset.default,
                     load_preset=self.load_preset,
                     rename_preset=self.rename_preset,
                     remove_preset=self.remove_preset,
@@ -106,19 +104,18 @@ class AudioChefWindow(BoxLayout):
             )
 
     def save_preset(self):
-        preset = {
-            "name": str(uuid.uuid4()),
-            "ext": state.get_prop("output_ext"),
-            "transformations": [
+        Preset(
+            name=str(uuid.uuid4()),
+            ext=state.get_prop("output_ext"),
+            transformations=[
                 child.get_state() for child in self.transforms_box.children[::-1]
             ],
-            "name_changer": self.name_changer.get_state(),
-        }
-        self.presets_file.save_preset(preset)
+            name_changer=self.name_changer.get_state(),
+        ).save()
 
     def load_preset(self, preset_id):
         logger.debug(f"AudioChefWindow: loading preset {preset_id}")
-        preset = self.presets_file.get_preset(preset_id)
+        preset = Preset.get(Preset.id == preset_id)
         logger.debug(f"AudioChefWindow: preset {preset_id} - {preset}")
         logger.debug(self.ext_box.options)
         if not self.ext_locked:
@@ -134,20 +131,21 @@ class AudioChefWindow(BoxLayout):
         if not self.name_locked:
             self.name_changer.load_state(preset["name_changer"])
 
-    def rename_preset(self, preset_name, new_name):
-        self.presets_file.rename_preset(preset_name, new_name)
-        self.reload_presets(self.presets_file.get_presets())
+    def rename_preset(self, preset_id, new_name):
+        preset = Preset.get(Preset.id == preset_id)
+        preset.name = new_name
+        preset.save()
+        self.reload_presets()
 
-    def remove_preset(self, preset_name):
-        self.presets_file.remove_preset(preset_name)
-        self.reload_presets(self.presets_file.get_presets())
+    def remove_preset(self, preset_id):
+        preset = Preset.get(Preset.id == preset_id)
+        preset.delete()
+        self.reload_presets()
 
-    def make_preset_default(self, preset_name, val):
-        presets = self.presets_file.get_presets()
-        for preset in presets:
-            if preset["name"] == preset_name:
-                preset["default"] = val
-        self.presets_file.set_presets(presets)
+    def make_preset_default(self, preset_id, val):
+        preset = Preset.get(Preset.id == preset_id)
+        preset.default = val
+        preset.save()
 
     def check_input_file_formats(self):
         selected_files = state.get_prop("selected_files")
@@ -191,5 +189,3 @@ class AudioChefWindow(BoxLayout):
 
     def remove_transformation(self, accordion_item):
         self.transforms_box.remove_widget(accordion_item)
-
-

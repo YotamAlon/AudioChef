@@ -11,7 +11,7 @@
     height: 40
     TextInput:
         text: root.preset_name
-        on_text: root.rename_preset(root.preset_name, self.text)
+        on_text: root.rename_preset(root.preset_id, self.text)
     Button:
         text: 'Load'
         on_release: root.load_preset(root.preset_id)
@@ -20,12 +20,12 @@
     CheckBox:
         group: 'default_preset'
         active: root.default
-        on_active: root.make_default(root.preset_name, self.active)
+        on_active: root.make_default(root.preset_id, self.active)
     Button:
         width: 50
         size_hint_x: None
         text: '-'
-        on_release: root.remove_preset(root.preset_name)
+        on_release: root.remove_preset(root.preset_id)
 
 
 <ValidatedInput>:
