@@ -1,5 +1,5 @@
 import json
-from peewee import TextField
+from peewee import TextField, DatabaseProxy
 
 
 class JSONField(TextField):
@@ -9,3 +9,6 @@ class JSONField(TextField):
     def python_value(self, value):
         if value is not None:
             return json.loads(value)
+
+
+db_proxy = DatabaseProxy()

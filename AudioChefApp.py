@@ -11,7 +11,8 @@ from kivy.uix.settings import SettingsWithSidebar
 from components.AudioChefWindow import AudioChefWindow
 
 from peewee import SqliteDatabase
-from models.Preset import Preset, db_proxy
+from models.Preset import Preset
+from models import db_proxy
 
 from utils.Dispatcher import dispatcher
 from utils.State import State, state

@@ -1,7 +1,5 @@
-from peewee import Model, CharField, BooleanField, DatabaseProxy
-from models import JSONField
-
-db_proxy = DatabaseProxy()
+from peewee import Model, CharField, BooleanField
+from models import JSONField, db_proxy
 
 
 class Preset(Model):
