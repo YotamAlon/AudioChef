@@ -1,6 +1,6 @@
-import configparser
 import json
 import logging
+import configparser
 
 from kivy import Config, platform
 from kivy.app import App
@@ -9,6 +9,9 @@ from kivy.metrics import Metrics
 from kivy.uix.settings import SettingsWithSidebar
 
 from components.AudioChefWindow import AudioChefWindow
+
+from peewee import SqliteDatabase
+from models.Preset import Preset, db_proxy
 
 from utils.Dispatcher import dispatcher
 from utils.State import State, state
@@ -34,20 +37,24 @@ class AudioChefApp(App):
     min_width = 1280
     min_height = 720
     dispatcher = dispatcher
-    support_audio_formats = SUPPORTED_AUDIO_FORMATS
+    supported_audio_formats = SUPPORTED_AUDIO_FORMATS
 
     def __init__(self):
         logger.setLevel(self.log_level)
         super().__init__()
 
     def build(self):
-        logger.info("Registering custom events ...")
-
         logger.info("Loading KV file ...")
-        self.load_kv("../audio_chef.kv")
+        self.load_kv("audio_chef.kv")
 
         logger.info("Loading audio formats ...")
         load_audio_formats()
+
+        logger.info('Initializing database ...')
+        db = SqliteDatabase('presets.db')
+        db_proxy.initialize(db)
+        db.create_tables([Preset])
+
         self.main_widget = AudioChefWindow()
 
         self.dispatcher.bind(on_add_transform_item=self.add_transform_item)

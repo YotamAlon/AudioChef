@@ -1,7 +1,7 @@
-from peewee import Model, CharField, BooleanField, SqliteDatabase
+from peewee import Model, CharField, BooleanField, DatabaseProxy
 from models import JSONField
 
-db = SqliteDatabase('presets.db')
+db_proxy = DatabaseProxy()
 
 
 class Preset(Model):
@@ -12,4 +12,4 @@ class Preset(Model):
     name_changer = JSONField()
 
     class Meta:
-        database = db
+        database = db_proxy
