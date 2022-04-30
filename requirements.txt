@@ -4,3 +4,4 @@ soundfile
 pedalboard
 pyinstaller
 peewee
+black

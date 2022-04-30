@@ -57,6 +57,8 @@ if __name__ == "__main__":
             resource_add_path(os.path.join(sys._MEIPASS))
             os.environ['PATH'] += os.pathsep + sys._MEIPASS
             app.run_dir = sys._MEIPASS
+        else:
+            app.run_dir = os.getcwd()
 
         logger.info('Running AudioChef App ...')
         loop.run_until_complete(app.async_run(async_lib='asyncio'))
