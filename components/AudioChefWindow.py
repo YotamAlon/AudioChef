@@ -11,7 +11,7 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
-from models.Preset import Preset
+from models.Preset import Preset, name_preset
 
 from components.NameChanger import NameChanger
 from components.TransformationForm import TransformationForm
@@ -60,7 +60,7 @@ class AudioChefWindow(BoxLayout):
                     load_preset=self.load_preset,
                     rename_preset=self.rename_preset,
                     remove_preset=self.remove_preset,
-                    make_default=self.make_preset_default,
+                    make_default=Preset.make_default,
                 )
             )
 
@@ -130,20 +130,13 @@ class AudioChefWindow(BoxLayout):
             self.name_changer.load_state(preset["name_changer"])
 
     def rename_preset(self, preset_id, new_name):
-        preset = Preset.get(Preset.id == preset_id)
-        preset.name = new_name
-        preset.save()
+        Preset.rename(preset_id, new_name)
         self.reload_presets()
 
     def remove_preset(self, preset_id):
         preset = Preset.get(Preset.id == preset_id)
         preset.delete()
         self.reload_presets()
-
-    def make_preset_default(self, preset_id, val):
-        preset = Preset.get(Preset.id == preset_id)
-        preset.default = val
-        preset.save()
 
     def check_input_file_formats(self):
         selected_files = state.get_prop("selected_files")
