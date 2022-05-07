@@ -19,10 +19,6 @@ class UnexecutableRecipeError(Exception):
     pass
 
 
-class FileLabel(Label):
-    pass
-
-
 class SelectableButton(Button):
     selected = BooleanProperty()
 

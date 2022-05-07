@@ -1,29 +1,28 @@
-<FilesBox@ScrollView>:
-    BoxLayout:
-        orientation: 'vertical'
+<FilesBox@BoxLayout>:
+    orientation: 'vertical'
+    Label:
+        text: 'Added files'
+        height: 25
         size_hint_y: None
+        pos_hint: {'top': 1}
+    BoxLayout:
+        orientation: 'horizontal'
+        height: 25
+        size_hint_y: None
+        pos_hint: {'top': 1}
         Label:
-            text: 'Added files'
-        BoxLayout:
-            orientation: 'vertical'
-            BoxLayout:
-                height: 25
-                size_hint_y: None
-                Label:
-                    text: "The files you chose are:"
-                Button:
-                    text: 'Clear all files'
-                    width: 150
-                    size_hint_x: None
-                    on_release: app.dispatcher.dispatch('on_clear_files')
-            ScrollView:
-                FileList:
-                    cols: 3
-                    id: file_box
-                    size_hint_y: None
+            text: "The files you chose are:"
+        Button:
+            text: 'Clear all files'
+            width: 150
+            size_hint_x: None
+            on_release: app.dispatcher.dispatch('on_clear_files')
+    ScrollView:
+        FileList:
+            id: file_list
+            height: 25 * len(self.children) / 3
+            size_hint_y: None
 
 
-
-<FileLabel>:
-    text_size: self.width, None
-    size: self.texture_size
+<FileList>:
+    cols: 3

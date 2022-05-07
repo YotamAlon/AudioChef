@@ -60,9 +60,13 @@
                 orientation: 'vertical'
                 ExtBox:
                     id: ext_item
+                    size_hint_y: None
+                    height: 30
                     locked: bool(root.ext_locked)
                 NameBox:
                     id: name_item
+                    height: 85
+                    size_hint_y: None
                     locked: bool(root.name_locked)
                 TransformsBox:
                     id: transforms_item
