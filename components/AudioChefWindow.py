@@ -11,7 +11,7 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
-from models.Preset import Preset, name_preset
+from models.Preset import Preset
 
 from components.NameChanger import NameChanger
 from components.TransformationForm import TransformationForm
@@ -117,17 +117,17 @@ class AudioChefWindow(BoxLayout):
         logger.debug(f"AudioChefWindow: preset {preset_id} - {preset}")
         logger.debug(self.ext_box.options)
         if not self.ext_locked:
-            self.ext_box.text = preset["ext"]
+            self.ext_box.text = preset.ext
 
         if not self.transforms_locked:
             self.transforms_box.clear_widgets()
-            for transform_state in preset["transformations"]:
+            for transform_state in preset.transformations:
                 self.add_tranform_item()
                 logger.debug(self.transforms_box.children)
                 self.transforms_box.children[0].load_state(transform_state)
 
         if not self.name_locked:
-            self.name_changer.load_state(preset["name_changer"])
+            self.name_changer.load_state(preset.name_changer)
 
     def rename_preset(self, preset_id, new_name):
         Preset.rename(preset_id, new_name)
