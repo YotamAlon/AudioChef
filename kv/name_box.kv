@@ -35,7 +35,7 @@
             width: 40
             active: root.mode == 'replace'
             group: 'name_changer'
-            on_active: root.mode = 'replace'
+            on_active: if self.active: root.mode = 'replace'
         Label:
             text: 'Wildcards'
         CheckBox:
@@ -43,7 +43,7 @@
             width: 40
             active: root.mode == 'wildcards'
             group: 'name_changer'
-            on_active: root.mode = 'wildcards'
+            on_active: if self.active: root.mode = 'wildcards'
     RelativeLayout:
         size_hint_y: None
         height: 55
