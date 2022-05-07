@@ -6,6 +6,7 @@ from kivy.uix.boxlayout import BoxLayout
 from utils.Dispatcher import dispatcher
 from utils.State import state
 from kivy_helpers import toggle_widget
+
 logger = logging.getLogger("audiochef")
 
 
@@ -28,9 +29,11 @@ class NameChanger(BoxLayout):
             )
 
     def on_kv_post(self, base_widget):
-        state.set_prop('name_change_func', self.change_name)
+        state.set_prop("name_change_func", self.change_name)
+        self.switch_widgets()
 
     def on_mode(self, instance, mode):
+        logger.debug(f"Switching mode to {self.mode}")
         self.switch_widgets()
         dispatcher.dispatch("on_name_changer_update")
 
