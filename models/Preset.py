@@ -4,8 +4,8 @@ from models import JSONField, db_proxy
 
 class Preset(Model):
     name = CharField(max_length=255)
-    default = BooleanField()
-    ext = CharField(max_length=64)
+    default = BooleanField(default=False)
+    ext = CharField(max_length=64, default='')
     transformations = JSONField()
     name_changer = JSONField()
 

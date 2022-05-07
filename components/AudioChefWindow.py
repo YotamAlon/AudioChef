@@ -44,7 +44,7 @@ class AudioChefWindow(BoxLayout):
 
     def on_kv_post(self, base_widget):
         self.reload_presets()
-        default_preset_id = Preset.get_or_none(Preset.default is True)
+        default_preset_id = Preset.get_or_none(default=True)
         if default_preset_id:
             self.load_preset(default_preset_id)
 
@@ -102,18 +102,20 @@ class AudioChefWindow(BoxLayout):
             )
 
     def save_preset(self):
-        Preset(
+        preset = Preset.create(
             name=str(uuid.uuid4()),
             ext=state.get_prop("output_ext"),
             transformations=[
                 child.get_state() for child in self.transforms_box.children[::-1]
             ],
             name_changer=self.name_changer.get_state(),
-        ).save()
+        )
+        logger.debug(f'Saved Preset {preset} and reloading preset list')
+        self.reload_presets()
 
     def load_preset(self, preset_id):
         logger.debug(f"AudioChefWindow: loading preset {preset_id}")
-        preset = Preset.get(Preset.id == preset_id)
+        preset = Preset.get(id=preset_id)
         logger.debug(f"AudioChefWindow: preset {preset_id} - {preset}")
         logger.debug(self.ext_box.options)
         if not self.ext_locked:
@@ -134,8 +136,8 @@ class AudioChefWindow(BoxLayout):
         self.reload_presets()
 
     def remove_preset(self, preset_id):
-        preset = Preset.get(Preset.id == preset_id)
-        preset.delete()
+        logger.debug(f'Deleting preset with id {preset_id}')
+        Preset.delete_by_id(preset_id)
         self.reload_presets()
 
     def check_input_file_formats(self):
