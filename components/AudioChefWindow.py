@@ -2,6 +2,7 @@ import os
 import uuid
 import logging
 import traceback
+from typing import List
 
 from pedalboard import Pedalboard
 
@@ -21,7 +22,7 @@ from components.helper_classes import (
     UnexecutableRecipeError,
 )
 
-from utils.audio_formats import SUPPORTED_AUDIO_FORMATS
+from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
 from utils.State import state
 
 logger = logging.getLogger("audiochef")
@@ -71,17 +72,14 @@ class AudioChefWindow(BoxLayout):
 
             transformations = self.get_transformations()
             self.check_selected_transformation(transformations)
-            selected_files = state.get_prop("selected_files")
+            selected_files: List[AudioFile] = state.get_prop("selected_files")
             for audio_file in selected_files:
-                outfile_name = self.get_output_name(audio_file.source_name)
-                outfile_ext = self.get_output_ext(audio_file.source_ext)
-
                 audio, sample_rate = audio_file.get_audio_data()
 
                 board = self.prepare_board(sample_rate, transformations)
                 res = board(audio)
 
-                audio_file.write_audio_data(outfile_name, outfile_ext, res, sample_rate)
+                audio_file.write_output_file(res, sample_rate)
         except UnexecutableRecipeError as e:
             logger.error(repr(e))
             Popup(
@@ -110,7 +108,7 @@ class AudioChefWindow(BoxLayout):
             ],
             name_changer=self.name_changer.get_state(),
         )
-        logger.debug(f'Saved Preset {preset} and reloading preset list')
+        logger.debug(f"Saved Preset {preset} and reloading preset list")
         self.reload_presets()
 
     def load_preset(self, preset_id):
@@ -136,7 +134,7 @@ class AudioChefWindow(BoxLayout):
         self.reload_presets()
 
     def remove_preset(self, preset_id):
-        logger.debug(f'Deleting preset with id {preset_id}')
+        logger.debug(f"Deleting preset with id {preset_id}")
         Preset.delete_by_id(preset_id)
         self.reload_presets()
 

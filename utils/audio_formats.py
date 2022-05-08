@@ -39,6 +39,9 @@ class FFMPEGAudioFormatter(AudioFormatter):
         given_audio.export(output_file, format=self.ext)
 
 
+class NoCompatibleAudioFormatException(Exception): pass
+
+
 class AudioFile:
     def __init__(self, filename: str):
         self.filename = filename
@@ -46,9 +49,13 @@ class AudioFile:
         self.source_name = name
         self.source_ext = ext.strip(".")
         self.source_audio_format = next(
-            (format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == ext), None
+            (format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == self.source_ext), None
         )
+        if self.source_audio_format is None:
+            raise NoCompatibleAudioFormatException(f"New supported audio format found for '{filename}'!")
         self.internal_file = None
+        self.destination_name = self.source_name
+        self.destination_ext = self.source_ext
 
     def __eq__(self, other):
         if not isinstance(other, AudioFile):
@@ -72,9 +79,15 @@ class AudioFile:
             self.source_name + self.source_ext, self.internal_file
         )
 
-    def write_output_file(self, output_name, output_ext, data, sample_rate):
+    def update_destination_name_and_ext(self, new_filename):
+        self.destination_name, self.destination_ext = os.path.splitext(new_filename)
+
+    def write_output_file(self, data, sample_rate):
         with soundfile.SoundFile(
-            output_name + ".wav", "w", samplerate=sample_rate, channels=len(data.shape)
+            f"{self.destination_name}.wav",
+            "w",
+            samplerate=sample_rate,
+            channels=len(data.shape),
         ) as f:
             f.write(data)
 
@@ -82,11 +95,14 @@ class AudioFile:
             (
                 format_
                 for format_ in SUPPORTED_AUDIO_FORMATS
-                if format_.ext == output_ext.strip(".")
+                if format_.ext == self.destination_ext
             ),
             None,
         )
-        output_format.encode(output_name + ".wav", output_name + output_ext)
+        output_format.encode(
+            self.destination_name + ".wav",
+            f"{self.destination_name}.{self.destination_ext}",
+        )
 
 
 def load_audio_formats():

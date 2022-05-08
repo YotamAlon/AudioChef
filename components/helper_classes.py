@@ -104,6 +104,7 @@ class FileArgumentBox(ValidatedInput):
 
 
 class FloatArgumentBox(ValidatedInput):
+    type = float
     transformation_name = StringProperty()
     min = NumericProperty()
     max = NumericProperty()
