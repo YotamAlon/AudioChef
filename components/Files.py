@@ -41,19 +41,23 @@ class FileList(GridLayout):
                 title="Unsupported file format!",
                 content=Label(
                     text=f"The file '{filename}' you just tried to add\n"
-                         f"is encoded in an audio format which is not currently suported.\n"
-                         f"If you think this is a mistake, please send me your audio_chef.log\n"
-                         f"file along with this audio file."),
-                size_hint=(.5, .5)).open()
+                    f"is encoded in an audio format which is not currently suported.\n"
+                    f"If you think this is a mistake, please send me your audio_chef.log\n"
+                    f"file along with this audio file."
+                ),
+                size_hint=(0.5, 0.5),
+            ).open()
             return
         selected_files = state.get_prop("selected_files")
 
         if audio_file not in selected_files:
             selected_files.append(audio_file)
-            file_label = Label(text=audio_file.filename)
+            file_label = FileLabel(text=audio_file.filename)
             self.add_widget(file_label)
 
-            preview_label = Label(text=self.get_output_filename(audio_file.filename))
+            preview_label = FileLabel(
+                text=self.get_output_filename(audio_file.filename)
+            )
             self.add_widget(preview_label)
 
             remove_button = Button(
@@ -107,3 +111,7 @@ class FileList(GridLayout):
     def get_output_ext(self, ext):
         output_ext = state.get_prop("output_ext")
         return "." + (output_ext or ext[1:])
+
+
+class FileLabel(Label):
+    pass
