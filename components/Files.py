@@ -51,7 +51,10 @@ class FileList(GridLayout):
         selected_files = state.get_prop("selected_files")
 
         if audio_file not in selected_files:
+            audio_file.update_destination_name_and_ext(self.get_output_filename(audio_file.filename))
             selected_files.append(audio_file)
+            state.set_prop("selected_files", selected_files)
+
             file_label = FileLabel(text=audio_file.filename)
             self.add_widget(file_label)
 
@@ -72,8 +75,6 @@ class FileList(GridLayout):
                 preview_label,
                 remove_button,
             )
-
-        state.set_prop("selected_files", selected_files)
 
     def remove_file(self, file: AudioFile):
         selected_files = state.get_prop("selected_files")

@@ -86,11 +86,13 @@ class AudioFile:
         self.source_audio_format.decode(self.filename, self.internal_file)
 
     def update_destination_name_and_ext(self, new_filename):
+        logger.debug(f"Updating {self.filename}'s output file to be {os.path.splitext(new_filename)}")
         self.destination_name, self.destination_ext = os.path.splitext(new_filename)
+        self.destination_ext = self.destination_ext.strip('.')
 
     def write_output_file(self, data, sample_rate):
         with soundfile.SoundFile(
-            f"{self.destination_name}.wav",
+            self.internal_file,
             "w",
             samplerate=sample_rate,
             channels=len(data.shape),
@@ -106,7 +108,7 @@ class AudioFile:
             None,
         )
         output_format.encode(
-            self.destination_name + ".wav",
+            self.internal_file,
             f"{self.destination_name}.{self.destination_ext}",
         )
 
