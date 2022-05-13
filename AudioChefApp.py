@@ -84,8 +84,19 @@ class AudioChefApp(App):
         ):
             Window.top = self.config.getint("Window", "top")
             Window.left = self.config.getint("Window", "left")
+        if self.config.getboolean('Window', 'maximized'):
+            Window.maximize()
+
         Window.bind(on_request_close=self.window_request_close)
+        Window.bind(on_maximize=self.set_window_maximized_state)
+        Window.bind(on_restore=self.set_window_restored_state)
         return self.main_widget
+
+    def set_window_maximized_state(self, window):
+        self.config.set('Window', 'maximized', 'true')
+
+    def set_window_restored_state(self, window):
+        self.config.set('Window', 'maximized', 'false')
 
     def window_request_close(self, *args, **kwargs):
         # Window.size is automatically adjusted for density, must divide by density when saving size
@@ -94,13 +105,14 @@ class AudioChefApp(App):
         self.config.set("Window", "height", Window.size[1] / Metrics.density)
         self.config.set("Window", "top", Window.top)
         self.config.set("Window", "left", Window.left)
+        # self.config.set('graphics', 'window_state', Window.ma)
         self.config.write()
         return False
 
     def build_config(self, config):
         Config.set('input', 'mouse', 'mouse,disable_multitouch')
         config.setdefaults(
-            "Window", {"width": self.min_width, "height": self.min_height}
+            "Window", {"width": self.min_width, "height": self.min_height, "maximized": 'false'}
         )
 
         for transformation_name, transformation in TRANSFORMATIONS.items():
