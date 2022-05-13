@@ -31,11 +31,13 @@ class AudioFormatter:
 
 class FFMPEGAudioFormatter(AudioFormatter):
     def decode(self, input_file, output_file):
+        logger.info(f'Reading from file {input_file}')
         given_audio = pydub.AudioSegment.from_file(input_file, format=self.ext)
         given_audio.export(output_file, format="wav")
 
     def encode(self, input_file, output_file):
         given_audio = pydub.AudioSegment.from_file(input_file, format="wav")
+        logger.info(f'Writing file {output_file}')
         given_audio.export(output_file, format=self.ext)
 
 
@@ -74,10 +76,14 @@ class AudioFile:
     def create_internal_file(self):
         _, name = os.path.split(self.source_name)
         self.internal_file = self.get_internal_file_path(name)
+        internal_dir = os.path.split(self.internal_file)[0]
+        if not os.path.exists(internal_dir):
+            os.mkdir(internal_dir)
 
-        self.source_audio_format.decode(
-            self.source_name + self.source_ext, self.internal_file
-        )
+        if os.path.exists(self.internal_file):
+            os.remove(self.internal_file)
+
+        self.source_audio_format.decode(self.filename, self.internal_file)
 
     def update_destination_name_and_ext(self, new_filename):
         self.destination_name, self.destination_ext = os.path.splitext(new_filename)

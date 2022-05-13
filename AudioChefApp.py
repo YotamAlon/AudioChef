@@ -1,11 +1,14 @@
 import json
 import logging
 import configparser
+import os
+import sys
 
 from kivy import Config, platform
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.metrics import Metrics
+from kivy.resources import resource_add_path
 from kivy.uix.settings import SettingsWithSidebar
 
 from components.AudioChefWindow import AudioChefWindow
@@ -17,7 +20,7 @@ from models import db_proxy
 from utils.Dispatcher import dispatcher
 from utils.State import State, state
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
-from utils.transformations import TRASNFORMATIONS
+from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
 
@@ -32,7 +35,6 @@ class AudioChefApp(App):
     light_color = (118 / 255, 168 / 255, 229 / 255)
     dark_color = (23 / 255, 63 / 255, 107 / 255)
     log_level = logging.INFO
-    run_dir = None
     config: configparser.ConfigParser
     state: State = state
     min_width = 1280
@@ -45,6 +47,15 @@ class AudioChefApp(App):
         super().__init__()
 
     def build(self):
+        if hasattr(sys, '_MEIPASS'):
+            resource_add_path(os.path.join(sys._MEIPASS))
+            os.environ['PATH'] += os.pathsep + sys._MEIPASS
+
+        if platform == "macosx":  # mac will not write into app folder
+            os.chdir("~/")
+        else:
+            os.chdir(f"{app.directory}/")
+
         logger.info("Loading KV file ...")
         self.load_kv("audio_chef.kv")
 
@@ -92,7 +103,7 @@ class AudioChefApp(App):
             "Window", {"width": self.min_width, "height": self.min_height}
         )
 
-        for transformation_name, transformation in TRASNFORMATIONS.items():
+        for transformation_name, transformation in TRANSFORMATIONS.items():
             arguments_dict = {}
             for argument in transformation.arguments:
                 if argument.type is float:
@@ -109,7 +120,7 @@ class AudioChefApp(App):
         return super().get_application_config(defaultpath=s)
 
     def build_settings(self, settings):
-        for transformation_name, transformation in TRASNFORMATIONS.items():
+        for transformation_name, transformation in TRANSFORMATIONS.items():
             arguments_list = []
             for argument in transformation.arguments:
                 if argument.type is float:

@@ -39,7 +39,7 @@ class TransformationWrapper:
     arguments: list
 
 
-TRASNFORMATIONS = {
+TRANSFORMATIONS = {
     "Convolution": TransformationWrapper(
         Convolution,
         [

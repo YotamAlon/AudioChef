@@ -1,9 +1,6 @@
 import os
 log_file_name = os.path.join(os.getcwd(), 'audio_chef.log')
 
-import sys
-# sys.stdout = sys.stderr = open(log_file_name, 'a')
-
 import kivy
 kivy.require('2.0.0')
 
@@ -11,7 +8,6 @@ import asyncio
 import traceback
 import logging.config
 from AudioChefApp import app
-from kivy.resources import resource_add_path
 
 LOG_CONFIG = {
     'version': 1,
@@ -53,13 +49,6 @@ if __name__ == "__main__":
     try:
         logger.info('Initializing event loop ...')
         loop = asyncio.get_event_loop()
-        if hasattr(sys, '_MEIPASS'):
-            resource_add_path(os.path.join(sys._MEIPASS))
-            os.environ['PATH'] += os.pathsep + sys._MEIPASS
-            app.run_dir = sys._MEIPASS
-        else:
-            app.run_dir = os.getcwd()
-
         logger.info('Running AudioChef App ...')
         loop.run_until_complete(app.async_run(async_lib='asyncio'))
         loop.close()

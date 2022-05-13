@@ -76,8 +76,8 @@ class AudioChefWindow(BoxLayout):
             for audio_file in selected_files:
                 audio, sample_rate = audio_file.get_audio_data()
 
-                board = self.prepare_board(sample_rate, transformations)
-                res = board(audio)
+                board = self.prepare_board(transformations)
+                res = board(audio, sample_rate)
 
                 audio_file.write_output_file(res, sample_rate)
         except UnexecutableRecipeError as e:
@@ -159,7 +159,10 @@ class AudioChefWindow(BoxLayout):
             )
 
     def get_transformations(self):
-        return [child.get_selected_tranform() for child in self.transforms_box.children]
+        return [
+            child.get_selected_tranform_and_args()
+            for child in self.transforms_box.children
+        ]
 
     def check_selected_transformation(self, transformations):
         if len(transformations) == 0 or any(
@@ -167,10 +170,10 @@ class AudioChefWindow(BoxLayout):
         ):
             raise UnexecutableRecipeError("You must choose a transformation to apply")
 
-    def prepare_board(self, sample_rate, transformations):
+    def prepare_board(self, transformations):
+        logger.debug(transformations)
         return Pedalboard(
-            [transform(**kwargs) for (_, transform), kwargs in transformations],
-            sample_rate=sample_rate,
+            [transform(**kwargs) for transform, kwargs in transformations]
         )
 
     def add_tranform_item(self):

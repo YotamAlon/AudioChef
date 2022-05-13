@@ -2,14 +2,14 @@ import logging
 from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 from components.TransformationParameterPopup import TransformationParameterPopup
-from utils.transformations import TRASNFORMATIONS
+from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
 
 
 class TransformationForm(BoxLayout):
     remove_callback = ObjectProperty()
-    transformations = TRASNFORMATIONS.keys()
+    transformations = TRANSFORMATIONS.keys()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -35,7 +35,7 @@ class TransformationForm(BoxLayout):
     def open_parameter_popup(self):
         TransformationParameterPopup(
             self.selected_transformation_name,
-            TRASNFORMATIONS[self.selected_transformation_name].arguments,
+            TRANSFORMATIONS[self.selected_transformation_name].arguments,
             title=f"Edit {self.selected_transformation_name} parameters",
             save_callback=self.update_arg_values,
         ).open()
@@ -44,10 +44,10 @@ class TransformationForm(BoxLayout):
         self.arg_values = arg_values
         logger.debug(f"Arguments for {self.selected_transformation_name} updated to {arg_values}")
 
-    def get_selected_tranform(self):
+    def get_selected_tranform_and_args(self):
         if self.selected_transformation_name is None:
             return None
-        return self.selected_transformation_name, self.arg_values
+        return TRANSFORMATIONS[self.selected_transformation_name].transform, self.arg_values
 
     def load_args_dict(self, args_dict: dict):
         self.arg_values = args_dict
