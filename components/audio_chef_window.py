@@ -12,10 +12,10 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
-from models.Preset import Preset
+from models.preset import Preset
 
-from components.NameChanger import NameChanger
-from components.TransformationForm import TransformationForm
+from components.name_changer import NameChanger
+from components.transformation_form import TransformationForm
 from components.helper_classes import (
     OptionsBox,
     PresetButton,

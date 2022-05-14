@@ -11,10 +11,10 @@ from kivy.metrics import Metrics
 from kivy.resources import resource_add_path
 from kivy.uix.settings import SettingsWithSidebar
 
-from components.AudioChefWindow import AudioChefWindow
+from components.audio_chef_window import AudioChefWindow
 
 from peewee import SqliteDatabase
-from models.Preset import Preset
+from models.preset import Preset
 from models import db_proxy
 
 from utils.Dispatcher import dispatcher

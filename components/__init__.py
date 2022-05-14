@@ -1,4 +1,4 @@
-from .Files import FileList
-from .NameChanger import NameChanger
+from .files import FileList
+from .name_changer import NameChanger
 
 __all__ = ['FileList', 'NameChanger']

@@ -1,7 +1,7 @@
 import logging
 from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
-from components.TransformationParameterPopup import TransformationParameterPopup
+from components.transformation_parameter_popup import TransformationParameterPopup
 from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")

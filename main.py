@@ -7,7 +7,7 @@ kivy.require('2.0.0')
 import asyncio
 import traceback
 import logging.config
-from AudioChefApp import app
+from audio_chef_app import app
 
 LOG_CONFIG = {
     'version': 1,
