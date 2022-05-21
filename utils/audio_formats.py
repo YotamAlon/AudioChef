@@ -31,17 +31,18 @@ class AudioFormatter:
 
 class FFMPEGAudioFormatter(AudioFormatter):
     def decode(self, input_file, output_file):
-        logger.info(f'Reading from file {input_file}')
+        logger.info(f"Reading from file {input_file}")
         given_audio = pydub.AudioSegment.from_file(input_file, format=self.ext)
         given_audio.export(output_file, format="wav")
 
     def encode(self, input_file, output_file):
         given_audio = pydub.AudioSegment.from_file(input_file, format="wav")
-        logger.info(f'Writing file {output_file}')
+        logger.info(f"Writing file {output_file}")
         given_audio.export(output_file, format=self.ext)
 
 
-class NoCompatibleAudioFormatException(Exception): pass
+class NoCompatibleAudioFormatException(Exception):
+    pass
 
 
 class AudioFile:
@@ -51,10 +52,17 @@ class AudioFile:
         self.source_name = name
         self.source_ext = ext.strip(".")
         self.source_audio_format = next(
-            (format_ for format_ in SUPPORTED_AUDIO_FORMATS if format_.ext == self.source_ext), None
+            (
+                format_
+                for format_ in SUPPORTED_AUDIO_FORMATS
+                if format_.can_decode and format_.ext == self.source_ext
+            ),
+            None,
         )
         if self.source_audio_format is None:
-            raise NoCompatibleAudioFormatException(f"New supported audio format found for '{filename}'!")
+            raise NoCompatibleAudioFormatException(
+                f"New supported audio format found for '{filename}'!"
+            )
         self.internal_file = None
         self.destination_name = self.source_name
         self.destination_ext = self.source_ext
@@ -86,9 +94,11 @@ class AudioFile:
         self.source_audio_format.decode(self.filename, self.internal_file)
 
     def update_destination_name_and_ext(self, new_filename):
-        logger.debug(f"Updating {self.filename}'s output file to be {os.path.splitext(new_filename)}")
+        logger.debug(
+            f"Updating {self.filename}'s output file to be {os.path.splitext(new_filename)}"
+        )
         self.destination_name, self.destination_ext = os.path.splitext(new_filename)
-        self.destination_ext = self.destination_ext.strip('.')
+        self.destination_ext = self.destination_ext.strip(".")
 
     def write_output_file(self, data, sample_rate):
         with soundfile.SoundFile(
@@ -103,7 +113,7 @@ class AudioFile:
             (
                 format_
                 for format_ in SUPPORTED_AUDIO_FORMATS
-                if format_.ext == self.destination_ext
+                if format_.can_encode and format_.ext == self.destination_ext
             ),
             None,
         )

@@ -1,10 +1,11 @@
 from kivy.event import EventDispatcher
+from kivy.uix.widget import Widget
 
 
 class Dispatcher(EventDispatcher):
     """Handle custom events"""
 
-    def __init__(self, **kwargs):
+    def __init__(self: Widget, **kwargs):
         super().__init__(**kwargs)
         self.register_event_type("on_clear_files")
         self.register_event_type("on_add_transform_item")

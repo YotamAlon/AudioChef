@@ -5,3 +5,5 @@ pedalboard
 pyinstaller
 peewee
 black
+pytest
+coverage
