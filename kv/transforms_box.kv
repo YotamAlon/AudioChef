@@ -42,10 +42,18 @@
         width: 50
         size_hint_x: None
         Button:
-            text: '^'
+            canvas:
+                Rectangle:
+                    pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
+                    size: [min(self.size)] * 2
+                    source: 'assets/icons/up-arrow.png'
             on_release: root.shift_up()
         Button:
-            text: 'v'
+            canvas:
+                Rectangle:
+                    pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
+                    size: [min(self.size)] * 2
+                    source: 'assets/icons/down-arrow.png'
             on_release: root.shift_down()
 
     Spinner:
