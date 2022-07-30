@@ -22,9 +22,13 @@
         active: root.default
         on_active: root.make_default(root.preset_id, self.active)
     Button:
+        canvas:
+            Rectangle:
+                pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
+                size: [min(self.size)] * 2
+                source: 'assets/icons/minus.png'
         width: 50
         size_hint_x: None
-        text: '-'
         on_release: root.remove_preset(root.preset_id)
 
 

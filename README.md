@@ -26,3 +26,9 @@ AudioChef supports a number of features:
 #### Refernces:
 
 I used a few of best practices/code snippets from https://github.com/ElliotGarbus/ChaseBlissEditor
+
+#### Attribution:
+
+I've used several icons from NounProject.com:
+* Plus and Minus by arjuazka
+* Up Arrow and Down Arrow by ArtWorkLeaf
