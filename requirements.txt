@@ -7,3 +7,4 @@ peewee
 black
 pytest
 coverage
+pillow

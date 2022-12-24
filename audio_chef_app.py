@@ -3,6 +3,7 @@ import logging
 import configparser
 import os
 import sys
+from pathlib import Path
 
 from kivy import Config, platform
 from kivy.app import App
@@ -52,9 +53,11 @@ class AudioChefApp(App):
             os.environ['PATH'] += os.pathsep + sys._MEIPASS
 
         if platform == "macosx":  # mac will not write into app folder
-            os.chdir("~/")
+            os.chdir(os.path.expanduser('~/'))
+            os.environ['PATH'] += os.pathsep + str(Path(__file__).parent / 'mac/ffmpeg')
         else:
             os.chdir(f"{app.directory}/")
+            os.environ['PATH'] += os.pathsep + str(Path(__file__).parent / 'windows/ffmpeg')
 
         logger.info("Loading KV file ...")
         self.load_kv("audio_chef.kv")
