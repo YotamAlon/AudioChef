@@ -1,10 +1,9 @@
+import logging
 import os
 import pprint
-
-import pydub
-import logging
-import soundfile
 import subprocess
+
+import soundfile
 
 ffmpeg_formats = {}
 SUPPORTED_AUDIO_FORMATS = []
@@ -13,7 +12,7 @@ logger = logging.getLogger("audiochef")
 
 
 class AudioFormatter:
-    def __init__(self, can_encode, can_decode, ext, description):
+    def __init__(self, can_encode: bool, can_decode, ext, description):
         self.can_encode = can_encode
         self.can_decode = can_decode
         self.ext = ext
@@ -32,10 +31,12 @@ class AudioFormatter:
 class FFMPEGAudioFormatter(AudioFormatter):
     def decode(self, input_file, output_file):
         logger.info(f"Reading from file {input_file}")
+        import pydub
         given_audio = pydub.AudioSegment.from_file(input_file, format=self.ext)
         given_audio.export(output_file, format="wav")
 
     def encode(self, input_file, output_file):
+        import pydub
         given_audio = pydub.AudioSegment.from_file(input_file, format="wav")
         logger.info(f"Writing file {output_file}")
         given_audio.export(output_file, format=self.ext)

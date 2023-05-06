@@ -1,0 +1,14 @@
+<ErrorPopup>:
+    title: 'An unexpected error has occurred!'
+    on_dismiss: app.stop()
+    size_hint: .5, .5
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Please report this error using the button below:'
+        Button:
+            size_hint: None, None
+            size: 120, 50
+            pos_hint: {'center_x': .5}
+            text: 'Report'
+            on_release: root.open_report_link()

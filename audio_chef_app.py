@@ -1,23 +1,19 @@
+import configparser
 import json
 import logging
-import configparser
-import os
-import sys
-from pathlib import Path
 
 from kivy import Config, platform
 from kivy.app import App
+from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.core.window import Window
 from kivy.metrics import Metrics
-from kivy.resources import resource_add_path
 from kivy.uix.settings import SettingsWithSidebar
+from peewee import SqliteDatabase
 
 from components.audio_chef_window import AudioChefWindow
-
-from peewee import SqliteDatabase
-from models.preset import Preset
+from components.error_popup import ErrorPopup
 from models import db_proxy
-
+from models.preset import Preset
 from utils.Dispatcher import dispatcher
 from utils.State import State, state
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
@@ -48,17 +44,6 @@ class AudioChefApp(App):
         super().__init__()
 
     def build(self):
-        if hasattr(sys, '_MEIPASS'):
-            resource_add_path(os.path.join(sys._MEIPASS))
-            os.environ['PATH'] += os.pathsep + sys._MEIPASS
-
-        if platform == "macosx":  # mac will not write into app folder
-            os.chdir(os.path.expanduser('~/'))
-            os.environ['PATH'] += os.pathsep + str(Path(__file__).parent / 'mac/ffmpeg')
-        else:
-            os.chdir(f"{app.directory}/")
-            os.environ['PATH'] += os.pathsep + str(Path(__file__).parent / 'windows/ffmpeg')
-
         logger.info("Loading KV file ...")
         self.load_kv("audio_chef.kv")
 
@@ -177,5 +162,14 @@ class AudioChefApp(App):
         if hasattr(self, "main_widget"):
             self.main_widget.add_tranform_item()
 
+
+class CriticalExceptionHandler(ExceptionHandler):
+    def handle_exception(self, inst):
+        logger.exception('Unhandled Exception!', exc_info=True)
+        ErrorPopup().open()
+        return ExceptionManager.PASS
+
+
+ExceptionManager.add_handler(CriticalExceptionHandler())
 
 app = AudioChefApp()

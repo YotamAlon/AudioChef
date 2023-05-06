@@ -1,16 +1,15 @@
-import json
-import os
 import logging
-from kivy.uix.label import Label
-from kivy.uix.button import Button
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.dropdown import DropDown
+import os
+
 from kivy.properties import (
     StringProperty,
     BooleanProperty,
     ObjectProperty,
     NumericProperty, ListProperty
 )
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.dropdown import DropDown
 
 logger = logging.getLogger("audiochef")
 
@@ -72,7 +71,6 @@ class OptionsBox(ValidatedInput):
 
     def on_kv_post(self, base_widget):
         for option in self.options:
-            logger.debug(f'Adding option {option} to dropdown')
             self.dropdown.add_widget(self.create_option_button(option))
 
         self.dropdown.bind(on_select=lambda _, option: setattr(self, 'text', option))
@@ -86,7 +84,6 @@ class OptionsBox(ValidatedInput):
         self.dropdown.clear_widgets()
         for option in self.options:
             if self.text in option:
-                logger.debug(f'Adding option {option} to dropdown')
                 self.dropdown.add_widget(self.create_option_button(option))
 
     def create_option_button(self, option):

@@ -1,13 +1,25 @@
+import asyncio
+import logging.config
 import os
-log_file_name = os.path.join(os.getcwd(), 'audio_chef.log')
+import sys
+from pathlib import Path
 
 import kivy
+from kivy import platform
+from kivy.resources import resource_add_path
+
+from audio_chef_app import app
+
 kivy.require('2.0.0')
 
-import asyncio
-import traceback
-import logging.config
-from audio_chef_app import app
+if platform == "macosx":  # mac will not write into app folder
+    home_dir = os.path.expanduser('~/')
+    ffmpeg_path = str(Path(__file__).parent / 'mac/ffmpeg')
+else:
+    home_dir = app.directory
+    ffmpeg_path = str(Path(__file__).parent / 'windows/ffmpeg')
+
+log_file_name = os.path.join(home_dir, 'audio_chef.log')
 
 LOG_CONFIG = {
     'version': 1,
@@ -45,12 +57,18 @@ LOG_CONFIG = {
 logging.config.dictConfig(LOG_CONFIG)
 logger = logging.getLogger('audiochef')
 
+logger.info('Setting ffmpeg path and changing cwd', extra={'ffmpeg_path': ffmpeg_path, 'home_dir': home_dir})
+os.environ['PATH'] += os.pathsep + ffmpeg_path
+os.chdir(home_dir)
+
+if hasattr(sys, '_MEIPASS'):
+    logger.info('Adding MEIPASS path to resource path and PATH env var', extra={'MEIPASS_path': sys._MEIPASS})
+    resource_add_path(os.path.join(sys._MEIPASS))
+    os.environ['PATH'] += os.pathsep + sys._MEIPASS
+
 if __name__ == "__main__":
-    try:
-        logger.info('Initializing event loop ...')
-        loop = asyncio.get_event_loop()
-        logger.info('Running AudioChef App ...')
-        loop.run_until_complete(app.async_run(async_lib='asyncio'))
-        loop.close()
-    except Exception as e:
-        logger.critical(repr(e) + '\n' + traceback.format_exc())
+    logger.info('Initializing event loop ...')
+    loop = asyncio.get_event_loop()
+    logger.info('Running AudioChef App ...')
+    loop.run_until_complete(app.async_run(async_lib='asyncio'))
+    loop.close()

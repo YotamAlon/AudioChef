@@ -8,7 +8,7 @@ class TestFFMPEGAudioFormatter:
 
 class TestAudioFile:
     def test_initialization_with_compatible_format(self):
-        SUPPORTED_AUDIO_FORMATS.append(FFMPEGAudioFormatter(False, True, 'test', 'test_formatter'))
+        SUPPORTED_AUDIO_FORMATS.append(FFMPEGAudioFormatter('', True, 'test', 'test_formatter'))
         AudioFile('filename.test')
 
     def test_initialization_without_compatible_format(self):
