@@ -1,30 +1,18 @@
-from typing import Type, Any
-from dataclasses import dataclass
-from pedalboard import (
-    Plugin,
-    Convolution,
-    Compressor,
-    Chorus,
-    Distortion,
-    Gain,
-    HighpassFilter,
-    LadderFilter,
-    Limiter,
-    LowpassFilter,
-    Phaser,
-    Reverb,
-)
+import dataclasses
+import typing
+
+import pedalboard
 
 
-@dataclass()
+@dataclasses.dataclass()
 class Argument:
     name: str
-    type: Type
-    default: Any = None
-    options: list = None
-    min: float = None
-    max: float = None
-    step: float = None
+    type: typing.Type
+    default: typing.Any = None
+    options: typing.Union[typing.List[str], None] = None
+    min: typing.Union[float, None] = None
+    max: typing.Union[float, None] = None
+    step: typing.Union[float, None] = None
 
     def __post_init__(self):
         if self.type is float:
@@ -33,22 +21,22 @@ class Argument:
             self.step = self.step or 10
 
 
-@dataclass
+@dataclasses.dataclass
 class TransformationWrapper:
-    transform: Plugin
+    transform: typing.Type[pedalboard.Plugin]
     arguments: list
 
 
 TRANSFORMATIONS = {
     "Convolution": TransformationWrapper(
-        Convolution,
+        pedalboard.Convolution,
         [
             Argument("impulse_response_filename", str),
             Argument("mix", float, 1.0),
         ],
     ),
     "Compressor": TransformationWrapper(
-        Compressor,
+        pedalboard.Compressor,
         [
             Argument("threshold_db", float, 0),
             Argument("ratio", float, 1),
@@ -57,7 +45,7 @@ TRANSFORMATIONS = {
         ],
     ),
     "Chorus": TransformationWrapper(
-        Chorus,
+        pedalboard.Chorus,
         [
             Argument("rate_hz", float, 1.0),
             Argument("depth", float, 0.25),
@@ -66,19 +54,19 @@ TRANSFORMATIONS = {
             Argument("mix", float, 0.5),
         ],
     ),
-    "Distortion": TransformationWrapper(Distortion, [Argument("drive_db", float, 25)]),
-    "Gain": TransformationWrapper(Gain, [Argument("gain_db", float, 1.0)]),
+    "Distortion": TransformationWrapper(pedalboard.Distortion, [Argument("drive_db", float, 25)]),
+    "Gain": TransformationWrapper(pedalboard.Gain, [Argument("gain_db", float, 1.0)]),
     "HighpassFilter": TransformationWrapper(
-        HighpassFilter, [Argument("cutoff_frequency_hz", float, 50)]
+        pedalboard.HighpassFilter, [Argument("cutoff_frequency_hz", float, 50)]
     ),
     "LadderFilter": TransformationWrapper(
-        LadderFilter,
+        pedalboard.LadderFilter,
         [
             Argument(
                 "mode",
-                LadderFilter.Mode,
-                LadderFilter.LPF12,
-                options=LadderFilter.Mode.__entries,
+                pedalboard.LadderFilter.Mode,
+                pedalboard.LadderFilter.LPF12,
+                options=[entry.name for entry in pedalboard.LadderFilter.Mode],
             ),
             Argument("cutoff_hz", float, 200),
             Argument("resonance", float, 0),
@@ -86,14 +74,14 @@ TRANSFORMATIONS = {
         ],
     ),
     "Limiter": TransformationWrapper(
-        Limiter,
+        pedalboard.Limiter,
         [Argument("threshold_db", float, -10.0), Argument("release_ms", float, 100.0)],
     ),
     "LowpassFilter": TransformationWrapper(
-        LowpassFilter, [Argument("cutoff_frequency_hz", float, 50)]
+        pedalboard.LowpassFilter, [Argument("cutoff_frequency_hz", float, 50)]
     ),
     "Phaser": TransformationWrapper(
-        Phaser,
+        pedalboard.Phaser,
         [
             Argument("rate_hz", float, 1.0),
             Argument("depth", float, 0.5),
@@ -103,7 +91,7 @@ TRANSFORMATIONS = {
         ],
     ),
     "Reverb": TransformationWrapper(
-        Reverb,
+        pedalboard.Reverb,
         [
             Argument("room_size", float, 0.5),
             Argument("damping", float, 0.5),

@@ -1,5 +1,6 @@
 import logging
 import os
+import typing
 
 from kivy.properties import (
     StringProperty,
@@ -63,7 +64,7 @@ class ValidatedInput(BoxLayout):
 
 
 class OptionsBox(ValidatedInput):
-    options = ListProperty()
+    options: typing.List[str] = ListProperty()
 
     def __init__(self, **kwargs):
         self.dropdown = DropDown()
@@ -86,7 +87,7 @@ class OptionsBox(ValidatedInput):
             if self.text in option:
                 self.dropdown.add_widget(self.create_option_button(option))
 
-    def create_option_button(self, option):
+    def create_option_button(self, option: str):
         option_button = Button(text=option, size_hint_y=None, height=44)
         option_button.bind(on_release=lambda _: self.dropdown.select(option))
         return option_button
