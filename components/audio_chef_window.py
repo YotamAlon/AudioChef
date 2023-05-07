@@ -89,15 +89,6 @@ class AudioChefWindow(BoxLayout):
                     "Check the folder with AudioChef it in."
                 ),
             )
-        except Exception:
-            logger.error(traceback.format_exc())
-            Popup(
-                title="I Encountered an Error!",
-                content=Label(
-                    text="I wrote all the info for the developer in a log file.\n"
-                    "Check the folder with AudioChef it in."
-                ),
-            )
 
     def save_preset(self):
         preset = Preset.create(
@@ -122,7 +113,7 @@ class AudioChefWindow(BoxLayout):
         if not self.transforms_locked:
             self.transforms_box.clear_widgets()
             for transform_state in preset.transformations:
-                self.add_tranform_item()
+                self.add_transform_item()
                 logger.debug(self.transforms_box.children)
                 self.transforms_box.children[0].load_state(transform_state)
 
