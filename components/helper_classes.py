@@ -72,17 +72,17 @@ class OptionsBox(ValidatedInput):
         super().__init__(**kwargs)
 
     def on_kv_post(self, _) -> None:
-    for option in self.options:
-        self.dropdown.add_widget(self.create_option_button(option))
+        for option in self.options:
+            self.dropdown.add_widget(self.create_option_button(option))
 
-    self.dropdown.bind(
-        on_select=lambda _, selected_option: setattr(self, "text", selected_option)
-    )
-    self.ids.text_input.bind(
-        focus=lambda _, v: self.dropdown.open(self.ids.text_input)
-        if v
-        else self.dropdown.dismiss()
-    )
+        self.dropdown.bind(
+            on_select=lambda _, selected_option: setattr(self, "text", selected_option)
+        )
+        self.ids.text_input.bind(
+            focus=lambda _, v: self.dropdown.open(self.ids.text_input)
+            if v
+            else self.dropdown.dismiss()
+        )
 
     def on_text(self, instance, pos):
         super().on_text(instance, pos)
