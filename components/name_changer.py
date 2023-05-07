@@ -1,11 +1,12 @@
 import logging
 from datetime import datetime
+
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 
-from utils.Dispatcher import dispatcher
-from utils.State import state
 from kivy_helpers import toggle_widget
+from utils.event_dispatcher import dispatcher
+from utils.state import state
 
 logger = logging.getLogger("audiochef")
 

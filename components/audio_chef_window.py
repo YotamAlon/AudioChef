@@ -1,29 +1,26 @@
-import os
-import uuid
 import logging
+import os
 import traceback
+import uuid
 from typing import List
-
-from pedalboard import Pedalboard
 
 from kivy.properties import ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
+from pedalboard import Pedalboard
 
-from models.preset import Preset
-
-from components.name_changer import NameChanger
-from components.transformation_form import TransformationForm
 from components.helper_classes import (
     OptionsBox,
     PresetButton,
     UnexecutableRecipeError,
 )
-
+from components.name_changer import NameChanger
+from components.transformation_form import TransformationForm
+from models.preset import Preset
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
-from utils.State import state
+from utils.state import state
 
 logger = logging.getLogger("audiochef")
 

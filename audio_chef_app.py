@@ -14,9 +14,9 @@ from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
 from models import db_proxy
 from models.preset import Preset
-from utils.Dispatcher import dispatcher
-from utils.State import State, state
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
+from utils.event_dispatcher import dispatcher
+from utils.state import State, state
 from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")

@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from typing import List
 
 from kivy.core.window import Window
@@ -8,13 +8,13 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 
-from utils.Dispatcher import dispatcher
 from utils.audio_formats import (
     AudioFile,
     SUPPORTED_AUDIO_FORMATS,
     NoCompatibleAudioFormatException,
 )
-from utils.State import state
+from utils.event_dispatcher import dispatcher
+from utils.state import state
 
 logger = logging.getLogger("audiochef")
 
