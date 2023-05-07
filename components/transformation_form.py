@@ -1,6 +1,8 @@
 import logging
+
 from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
+
 from components.transformation_parameter_popup import TransformationParameterPopup
 from utils.transformations import TRANSFORMATIONS
 
@@ -33,12 +35,16 @@ class TransformationForm(BoxLayout):
         self.ids.args_box.clear_widgets()
 
     def open_parameter_popup(self):
-        TransformationParameterPopup(
-            self.selected_transformation_name,
-            TRANSFORMATIONS[self.selected_transformation_name].arguments,
-            title=f"Edit {self.selected_transformation_name} parameters",
-            save_callback=self.update_arg_values,
-        ).open()
+        if self.selected_transformation_name:
+            TransformationParameterPopup(
+                self.selected_transformation_name,
+                TRANSFORMATIONS[self.selected_transformation_name].arguments,
+                title=f"Edit {self.selected_transformation_name} parameters",
+                save_callback=self.update_arg_values,
+            ).open()
+        else:
+            # TODO: Open a popup here to let the user know he must select a transformation first
+            pass
 
     def update_arg_values(self, arg_values: dict):
         self.arg_values = arg_values

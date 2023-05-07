@@ -66,7 +66,7 @@ TRANSFORMATIONS = {
                 "mode",
                 pedalboard.LadderFilter.Mode,
                 pedalboard.LadderFilter.LPF12,
-                options=[entry.name for entry in pedalboard.LadderFilter.Mode],
+                options=list(pedalboard.LadderFilter.Mode.__members__.keys()),
             ),
             Argument("cutoff_hz", float, 200),
             Argument("resonance", float, 0),
