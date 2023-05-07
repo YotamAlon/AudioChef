@@ -2,13 +2,13 @@ import configparser
 import json
 import logging
 
-from kivy import Config, platform
-from kivy.app import App
-from kivy.base import ExceptionHandler, ExceptionManager
-from kivy.core.window import Window
-from kivy.metrics import Metrics
-from kivy.uix.settings import SettingsWithSidebar
-from peewee import SqliteDatabase
+import kivy
+import kivy.app
+import kivy.base
+import kivy.core.window
+import kivy.metrics
+import kivy.uix.settings
+import peewee
 
 from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
@@ -22,9 +22,9 @@ from utils.transformations import TRANSFORMATIONS
 logger = logging.getLogger("audiochef")
 
 
-class AudioChefApp(App):
+class AudioChefApp(kivy.app.App):
     version = "0.3"
-    settings_cls = SettingsWithSidebar
+    settings_cls = kivy.uix.settings.SettingsWithSidebar
     use_kivy_settings = False
     icon = "assets/chef_hat.png"
     window_background_color = (220 / 255, 220 / 255, 220 / 255, 1)
@@ -50,53 +50,62 @@ class AudioChefApp(App):
         logger.info("Loading audio formats ...")
         load_audio_formats()
 
-        logger.info('Initializing database ...')
-        db = SqliteDatabase('presets.db')
+        logger.info("Initializing database ...")
+        db = peewee.SqliteDatabase("presets.db")
         db_proxy.initialize(db)
         db.create_tables([Preset])
 
         logger.debug("Binding dropfile event ...")
-        Window.clearcolor = app.window_background_color
-        Window.size = (
+        kivy.core.window.Window.clearcolor = app.window_background_color
+        kivy.core.window.Window.size = (
             self.config.getfloat("Window", "width"),
             self.config.getfloat("Window", "height"),
         )
-        Window.minimum_width = self.min_width
-        Window.minimum_height = self.min_height
+        kivy.core.window.Window.minimum_width = self.min_width
+        kivy.core.window.Window.minimum_height = self.min_height
         if self.config.has_option("Window", "top") and self.config.has_option(
-            "Window", "left"
+                "Window", "left"
         ):
-            Window.top = self.config.getint("Window", "top")
-            Window.left = self.config.getint("Window", "left")
-        if self.config.getboolean('Window', 'maximized'):
-            Window.maximize()
+            kivy.core.window.Window.top = self.config.getint("Window", "top")
+            kivy.core.window.Window.left = self.config.getint("Window", "left")
+        if self.config.getboolean("Window", "maximized"):
+            kivy.core.window.Window.maximize()
 
-        Window.bind(on_request_close=self.window_request_close)
-        Window.bind(on_maximize=self.set_window_maximized_state)
-        Window.bind(on_restore=self.set_window_restored_state)
-        return self.main_widget
+        kivy.core.window.Window.bind(on_request_close=self.window_request_close)
+        kivy.core.window.Window.bind(on_maximize=self.set_window_maximized_state)
+        kivy.core.window.Window.bind(on_restore=self.set_window_restored_state)
+        return AudioChefWindow()
 
     def set_window_maximized_state(self, window):
-        self.config.set('Window', 'maximized', 'true')
+        self.config.set("Window", "maximized", "true")
 
     def set_window_restored_state(self, window):
-        self.config.set('Window', 'maximized', 'false')
+        self.config.set("Window", "maximized", "false")
 
     def window_request_close(self, *args, **kwargs):
         # Window.size is automatically adjusted for density, must divide by density when saving size
         logger.debug("Saving window config before exiting ...")
-        self.config.set("Window", "width", Window.size[0] / Metrics.density)
-        self.config.set("Window", "height", Window.size[1] / Metrics.density)
-        self.config.set("Window", "top", Window.top)
-        self.config.set("Window", "left", Window.left)
+        self.config.set(
+            "Window",
+            "width",
+            kivy.core.window.Window.size[0] / kivy.metrics.Metrics.density,
+        )
+        self.config.set(
+            "Window",
+            "height",
+            kivy.core.window.Window.size[1] / kivy.metrics.Metrics.density,
+        )
+        self.config.set("Window", "top", kivy.core.window.Window.top)
+        self.config.set("Window", "left", kivy.core.window.Window.left)
         # self.config.set('graphics', 'window_state', Window.ma)
         self.config.write()
         return False
 
     def build_config(self, config):
-        Config.set('input', 'mouse', 'mouse,disable_multitouch')
+        kivy.Config.set("input", "mouse", "mouse,disable_multitouch")
         config.setdefaults(
-            "Window", {"width": self.min_width, "height": self.min_height, "maximized": 'false'}
+            "Window",
+            {"width": self.min_width, "height": self.min_height, "maximized": "false"},
         )
 
         for transformation_name, transformation in TRANSFORMATIONS.items():
@@ -109,7 +118,7 @@ class AudioChefApp(App):
             config.setdefaults(transformation_name, arguments_dict)
 
     def get_application_config(self, defaultpath="%(appdir)s/%(appname)s.ini"):
-        if platform == "macosx":  # mac will not write into app folder
+        if kivy.platform == "macosx":  # mac will not write into app folder
             s = "~/.%(appname)s.ini"
         else:
             s = defaultpath
@@ -152,14 +161,13 @@ class AudioChefApp(App):
             )
 
 
-
-class CriticalExceptionHandler(ExceptionHandler):
+class CriticalExceptionHandler(kivy.base.ExceptionHandler):
     def handle_exception(self, inst):
-        logger.exception('Unhandled Exception!', exc_info=True)
+        logger.exception("Unhandled Exception!", exc_info=True)
         ErrorPopup().open()
-        return ExceptionManager.PASS
+        return kivy.base.ExceptionManager.PASS
 
 
-ExceptionManager.add_handler(CriticalExceptionHandler())
+kivy.base.ExceptionManager.add_handler(CriticalExceptionHandler())
 
 app = AudioChefApp()

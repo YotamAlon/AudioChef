@@ -65,7 +65,7 @@ class AudioChefWindow(BoxLayout):
                 )
             )
 
-    def execute_preset(self):
+    def execute_preset(self) -> None:
         try:
             self.check_input_file_formats()
             self.check_output_file_formats()
@@ -93,7 +93,7 @@ class AudioChefWindow(BoxLayout):
     def save_preset(self):
         preset = Preset.create(
             name=str(uuid.uuid4()),
-            ext=state.get_prop("output_ext"),
+            ext=state.get_prop("output_ext", ""),
             transformations=[
                 child.get_state() for child in self.transforms_box.children[::-1]
             ],
@@ -163,7 +163,7 @@ class AudioChefWindow(BoxLayout):
 
     def prepare_board(self, transformations):
         logger.debug(transformations)
-        return Pedalboard(
+        return pedalboard.Pedalboard(
             [transform(**kwargs) for transform, kwargs in transformations]
         )
 
