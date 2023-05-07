@@ -55,10 +55,6 @@ class AudioChefApp(App):
         db_proxy.initialize(db)
         db.create_tables([Preset])
 
-        self.main_widget = AudioChefWindow()
-
-        self.dispatcher.bind(on_add_transform_item=self.add_transform_item)
-
         logger.debug("Binding dropfile event ...")
         Window.clearcolor = app.window_background_color
         Window.size = (
@@ -155,12 +151,6 @@ class AudioChefApp(App):
                 transformation_name, self.config, data=json.dumps(arguments_list)
             )
 
-    def change_name(self, old_name: str) -> str:
-        return self.main_widget.change_name(old_name)
-
-    def add_transform_item(self, *args, **kwargs):
-        if hasattr(self, "main_widget"):
-            self.main_widget.add_tranform_item()
 
 
 class CriticalExceptionHandler(ExceptionHandler):

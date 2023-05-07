@@ -1,16 +1,16 @@
 import logging
 import os
-import traceback
 import uuid
 from typing import List
 
+import pedalboard
 from kivy.properties import ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
-from pedalboard import Pedalboard
 
+import utils.event_dispatcher
 from components.helper_classes import (
     OptionsBox,
     PresetButton,
@@ -38,6 +38,9 @@ class AudioChefWindow(BoxLayout):
         logger.debug("Starting initialization of AudioChef main window ...")
         self.selected_transformations = []
         super().__init__(**kwargs)
+        utils.event_dispatcher.dispatcher.bind(
+            on_add_transform_item=self.add_transform_item
+        )
         logger.debug("Initialization of AudioChef main window completed.")
 
     def on_kv_post(self, base_widget):
@@ -173,7 +176,7 @@ class AudioChefWindow(BoxLayout):
             [transform(**kwargs) for transform, kwargs in transformations]
         )
 
-    def add_tranform_item(self):
+    def add_transform_item(self):
         self.transforms_box.add_widget(
             TransformationForm(remove_callback=self.remove_transformation)
         )
