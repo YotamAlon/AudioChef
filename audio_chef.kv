@@ -44,6 +44,12 @@
             BoxLayout:
                 id: presets_box
                 orientation: 'vertical'
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Line:
+                        width: 1
+                        rectangle: self.x, self.y, self.width, self.height
         BoxLayout:
             orientation: 'vertical'
             BoxLayout:
@@ -64,13 +70,37 @@
                     size_hint_y: None
                     height: 30
                     locked: bool(root.ext_locked)
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1
+                        Line:
+                            width: 1
+                            rectangle: self.x, self.y, self.width, self.height
                 NameBox:
                     id: name_item
                     height: 85
                     size_hint_y: None
                     locked: bool(root.name_locked)
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1
+                        Line:
+                            width: 1
+                            rectangle: self.x, self.y, self.width, self.height
                 TransformsBox:
                     id: transforms_item
                     locked: bool(root.transforms_locked)
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1
+                        Line:
+                            width: 1
+                            rectangle: self.x, self.y, self.width, self.height
                 FilesBox:
                     id: file_item
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1
+                        Line:
+                            width: 1
+                            rectangle: self.x, self.y, self.width, self.height
