@@ -24,7 +24,7 @@ class Argument:
 @dataclasses.dataclass
 class TransformationWrapper:
     transform: typing.Type[pedalboard.Plugin]
-    arguments: list
+    arguments: typing.List[Argument]
 
 
 TRANSFORMATIONS = {
@@ -54,7 +54,9 @@ TRANSFORMATIONS = {
             Argument("mix", float, 0.5),
         ],
     ),
-    "Distortion": TransformationWrapper(pedalboard.Distortion, [Argument("drive_db", float, 25)]),
+    "Distortion": TransformationWrapper(
+        pedalboard.Distortion, [Argument("drive_db", float, 25)]
+    ),
     "Gain": TransformationWrapper(pedalboard.Gain, [Argument("gain_db", float, 1.0)]),
     "HighpassFilter": TransformationWrapper(
         pedalboard.HighpassFilter, [Argument("cutoff_frequency_hz", float, 50)]
