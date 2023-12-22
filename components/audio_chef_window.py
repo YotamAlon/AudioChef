@@ -167,7 +167,7 @@ class AudioChefWindow(BoxLayout):
             [transform(**kwargs) for transform, kwargs in transformations]
         )
 
-    def add_transform_item(self):
+    def add_transform_item(self, *_):
         self.transforms_box.add_widget(
             TransformationForm(remove_callback=self.remove_transformation)
         )

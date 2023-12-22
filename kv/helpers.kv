@@ -33,6 +33,9 @@
 
 
 <ValidatedInput>:
+    width: 500
+    size_hint_x: None
+    pos_hint: {'top': 1}
     text: text_input.text
     size_hint_y: None
     height: max(input_label.height, text_input.height)
@@ -40,7 +43,7 @@
         id: input_label
         text: root.name
         height: max(25, self.texture_size[1])
-        width: self.texture_size[0] + 10
+        width: 200
         size_hint: None, None
     TextInput:
         id: text_input

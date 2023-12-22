@@ -20,8 +20,8 @@ AudioChef supports a number of features:
 * Loading VST3 plugins and saving them in AudioChef
 
 #### TODO:
-* Successfully build for mac
-* Add borders around the main boxes
+
+* Support VST3 plugins
 
 #### Refernces:
 

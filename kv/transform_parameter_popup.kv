@@ -1,11 +1,16 @@
 <TransformationParameterPopup>:
     BoxLayout:
         orientation: 'vertical'
+        Label:
+            height: 10
+            size_hint_y: None
         ScrollView:
             BoxLayout:
                 id: args_box
                 size_hint_y: None
+                height: max([child.height for child in self.children] + [0]) * len(self.children) + 40
                 orientation: 'vertical'
+                spacing: 10
         BoxLayout:
             height: 50
             size_hint_y: None
@@ -20,8 +25,6 @@
 
 
 <FloatArgumentBox>:
-    width: 240
-    size_hint_x: None
     Slider:
         id: slider
         min: app.config.getfloat(root.transformation_name, root.name + ' min')
