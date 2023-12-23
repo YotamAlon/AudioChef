@@ -1,30 +1,23 @@
-import logging
-import os
 import uuid
 from typing import List
 
-import pedalboard
 from kivy.properties import ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
 import utils.event_dispatcher
 from components.helper_classes import (
     OptionsBox,
     PresetButton,
-    UnexecutableRecipeError,
 )
 from components.name_changer import NameChanger
 from components.transformation_form import TransformationForm
+from controller import logger, Controller
 from models.preset import Preset
-from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
+from utils.audio_formats import AudioFile
 from utils.state import state
 
 CURRENT_PRESET = "current_preset"
-
-logger = logging.getLogger("audiochef")
 
 
 class ExtensionBox(OptionsBox):
@@ -85,31 +78,10 @@ class AudioChefWindow(BoxLayout):
             )
 
     def execute_preset(self) -> None:
-        try:
-            self.check_input_file_formats(
-                selected_files=state.get_prop("selected_files")
-            )
-            self.check_output_file_formats(self.ext_box.text)
-
-            transformations = self.get_transformations()
-            self.check_selected_transformation(transformations)
-            selected_files: List[AudioFile] = state.get_prop("selected_files")
-            for audio_file in selected_files:
-                audio, sample_rate = audio_file.get_audio_data()
-
-                board = self.prepare_board(transformations)
-                res = board(audio, sample_rate)
-
-                audio_file.write_output_file(res, sample_rate)
-        except UnexecutableRecipeError as e:
-            logger.error(repr(e))
-            Popup(
-                title="I Encountered an Error!",
-                content=Label(
-                    text="I wrote all the info for the developer in a log file.\n"
-                    "Check the folder with AudioChef it in."
-                ),
-            )
+        output_ext = self.ext_box.text
+        transformations = self.get_transformations()
+        selected_files: List[AudioFile] = state.get_prop("selected_files")
+        Controller.execute_preset(output_ext, selected_files, transformations)
 
     def save_preset(self):
         preset = Preset.create(
@@ -146,43 +118,8 @@ class AudioChefWindow(BoxLayout):
         Preset.delete_by_id(preset_id)
         self.reload_presets()
 
-    def check_input_file_formats(self, selected_files: list[AudioFile]):
-        for audio_file in selected_files:
-            name, ext = os.path.splitext(audio_file.filename)
-
-            if ext.lower()[1:] not in [
-                format_.ext.lower()
-                for format_ in SUPPORTED_AUDIO_FORMATS
-                if format_.can_decode
-            ]:
-                raise UnexecutableRecipeError(
-                    f'"{audio_file.filename}" is not in a supported format'
-                )
-
-    def check_output_file_formats(self, output_ext: str):
-        if output_ext not in [
-            format_.ext.lower()
-            for format_ in SUPPORTED_AUDIO_FORMATS
-            if format_.can_encode
-        ]:
-            raise UnexecutableRecipeError(
-                f'"{output_ext}" is not a supported output format'
-            )
-
     def get_transformations(self):
         return [
             child.get_selected_tranform_and_args()
             for child in self.transforms_box.children
         ]
-
-    def check_selected_transformation(self, transformations):
-        if len(transformations) == 0 or any(
-            transform is None for transform in transformations
-        ):
-            raise UnexecutableRecipeError("You must choose a transformation to apply")
-
-    def prepare_board(self, transformations):
-        logger.debug(transformations)
-        return pedalboard.Pedalboard(
-            [transform(**kwargs) for transform, kwargs in transformations]
-        )
