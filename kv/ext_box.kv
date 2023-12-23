@@ -2,7 +2,7 @@
     orientation: 'vertical'
     BoxLayout:
         orientation: 'horizontal'
-        OptionsBox:
+        ExtensionBox:
             id: ext_box
             name: "Choose the output format (empty means the same as the input if supported)"
             options: [""] + [format_.ext.lower() for format_ in app.supported_audio_formats if format_.can_encode]

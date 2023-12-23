@@ -22,15 +22,34 @@ from models.preset import Preset
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, AudioFile
 from utils.state import state
 
+CURRENT_PRESET = "current_preset"
+
 logger = logging.getLogger("audiochef")
+
+
+class ExtensionBox(OptionsBox):
+    def load_from_state(self, ext: str) -> None:
+        self.text = ext
+
+
+class TransformsBox2(BoxLayout):
+    def load_from_state(self, transformations: list[dict]) -> None:
+        self.clear_widgets()
+        for transform_state in transformations:
+            self.add_widget(TransformationForm(remove_callback=self.remove_widget))
+            logger.debug(self.children)
+            self.children[0].load_state(transform_state)
+
+    def add_transform_item(self, *_):
+        self.add_widget(TransformationForm(remove_callback=self.remove_widget))
 
 
 class AudioChefWindow(BoxLayout):
     name_changer: NameChanger = ObjectProperty()
     name_locked = BooleanProperty()
-    ext_box: OptionsBox = ObjectProperty()
+    ext_box: ExtensionBox = ObjectProperty()
     ext_locked = BooleanProperty()
-    transforms_box: Widget = ObjectProperty()
+    transforms_box: TransformsBox2 = ObjectProperty()
     transforms_locked: BooleanProperty()
     presets_box: Widget = ObjectProperty()
 
@@ -39,7 +58,7 @@ class AudioChefWindow(BoxLayout):
         self.selected_transformations = []
         super().__init__(**kwargs)
         utils.event_dispatcher.dispatcher.bind(
-            on_add_transform_item=self.add_transform_item
+            on_add_transform_item=self.transforms_box.add_transform_item
         )
         logger.debug("Initialization of AudioChef main window completed.")
 
@@ -67,8 +86,10 @@ class AudioChefWindow(BoxLayout):
 
     def execute_preset(self) -> None:
         try:
-            self.check_input_file_formats()
-            self.check_output_file_formats()
+            self.check_input_file_formats(
+                selected_files=state.get_prop("selected_files")
+            )
+            self.check_output_file_formats(self.ext_box.text)
 
             transformations = self.get_transformations()
             self.check_selected_transformation(transformations)
@@ -106,17 +127,13 @@ class AudioChefWindow(BoxLayout):
         logger.debug(f"AudioChefWindow: loading preset {preset_id}")
         preset = Preset.get(id=preset_id)
         logger.debug(f"AudioChefWindow: preset {preset_id} - {preset}")
+        state.set_prop(CURRENT_PRESET, preset)
         logger.debug(self.ext_box.options)
+
         if not self.ext_locked:
-            self.ext_box.text = preset.ext
-
+            self.ext_box.load_from_state(preset.ext)
         if not self.transforms_locked:
-            self.transforms_box.clear_widgets()
-            for transform_state in preset.transformations:
-                self.add_transform_item()
-                logger.debug(self.transforms_box.children)
-                self.transforms_box.children[0].load_state(transform_state)
-
+            self.transforms_box.load_from_state(preset.transformations)
         if not self.name_locked:
             self.name_changer.load_state(preset.name_changer)
 
@@ -129,8 +146,7 @@ class AudioChefWindow(BoxLayout):
         Preset.delete_by_id(preset_id)
         self.reload_presets()
 
-    def check_input_file_formats(self):
-        selected_files = state.get_prop("selected_files")
+    def check_input_file_formats(self, selected_files: list[AudioFile]):
         for audio_file in selected_files:
             name, ext = os.path.splitext(audio_file.filename)
 
@@ -143,10 +159,14 @@ class AudioChefWindow(BoxLayout):
                     f'"{audio_file.filename}" is not in a supported format'
                 )
 
-    def check_output_file_formats(self):
-        if not self.ext_box.validated:
+    def check_output_file_formats(self, output_ext: str):
+        if output_ext not in [
+            format_.ext.lower()
+            for format_ in SUPPORTED_AUDIO_FORMATS
+            if format_.can_encode
+        ]:
             raise UnexecutableRecipeError(
-                f'"{self.ext_box.text}" is not a supported output format'
+                f'"{output_ext}" is not a supported output format'
             )
 
     def get_transformations(self):
@@ -166,11 +186,3 @@ class AudioChefWindow(BoxLayout):
         return pedalboard.Pedalboard(
             [transform(**kwargs) for transform, kwargs in transformations]
         )
-
-    def add_transform_item(self, *_):
-        self.transforms_box.add_widget(
-            TransformationForm(remove_callback=self.remove_transformation)
-        )
-
-    def remove_transformation(self, accordion_item):
-        self.transforms_box.remove_widget(accordion_item)
