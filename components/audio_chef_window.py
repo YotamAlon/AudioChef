@@ -13,7 +13,7 @@ from components.helper_classes import (
 from components.name_changer import NameChanger
 from components.transformation_form import TransformationForm
 from controller import logger, Controller
-from models.preset import Preset
+from models.preset import PresetModel, Preset, Transformation, NameChangeParameters
 from utils.audio_formats import AudioFile
 from utils.state import state
 
@@ -26,12 +26,12 @@ class ExtensionBox(OptionsBox):
 
 
 class TransformsBox2(BoxLayout):
-    def load_from_state(self, transformations: list[dict]) -> None:
+    def load_from_state(self, transformations: list[Transformation]) -> None:
         self.clear_widgets()
-        for transform_state in transformations:
+        for transform in transformations:
             self.add_widget(TransformationForm(remove_callback=self.remove_widget))
             logger.debug(self.children)
-            self.children[0].load_state(transform_state)
+            self.children[0].load_state(transform)
 
     def add_transform_item(self, *_):
         self.add_widget(TransformationForm(remove_callback=self.remove_widget))
@@ -57,12 +57,12 @@ class AudioChefWindow(BoxLayout):
 
     def on_kv_post(self, base_widget):
         self.reload_presets()
-        default_preset_id = Preset.get_or_none(default=True)
+        default_preset_id = PresetModel.get_or_none(default=True)
         if default_preset_id:
             self.load_preset(default_preset_id)
 
     def reload_presets(self):
-        presets = Preset.select()
+        presets = PresetModel.select()
         self.presets_box.clear_widgets()
         for preset in presets:
             self.presets_box.add_widget(
@@ -73,7 +73,7 @@ class AudioChefWindow(BoxLayout):
                     load_preset=self.load_preset,
                     rename_preset=self.rename_preset,
                     remove_preset=self.remove_preset,
-                    make_default=Preset.make_default,
+                    make_default=PresetModel.make_default,
                 )
             )
 
@@ -84,7 +84,7 @@ class AudioChefWindow(BoxLayout):
         Controller.execute_preset(output_ext, selected_files, transformations)
 
     def save_preset(self):
-        preset = Preset.create(
+        preset = PresetModel.create(
             name=str(uuid.uuid4()),
             ext=state.get_prop("output_ext", ""),
             transformations=[
@@ -97,25 +97,52 @@ class AudioChefWindow(BoxLayout):
 
     def load_preset(self, preset_id):
         logger.debug(f"AudioChefWindow: loading preset {preset_id}")
-        preset = Preset.get(id=preset_id)
+        preset = PresetModel.get(id=preset_id)
         logger.debug(f"AudioChefWindow: preset {preset_id} - {preset}")
+        preset = Preset(
+            name=preset.name,
+            ext=preset.ext,
+            transformations=[
+                Transformation(
+                    name=transformation["transform_name"], params=transformation["args"]
+                )
+                for transformation in preset.transformations
+            ],
+            name_change_parameters=NameChangeParameters(
+                mode=preset.name_changer["mode"],
+                wildcards_input=preset.name_changer["wildcards_input"],
+                replace_from_input=preset.name_changer["replace_from_input"],
+                replace_to_input=preset.name_changer["replace_to_input"],
+            ),
+        )
+
+        def load_ext(preset: Preset):
+            if not self.ext_locked:
+                self.ext_box.load_from_state(preset.ext)
+
+        def load_transformations(preset: Preset):
+            if not self.transforms_locked:
+                self.transforms_box.load_from_state(preset.transformations)
+
+        def load_name_changer(preset: Preset):
+            if not self.name_locked:
+                self.name_changer.load_state(preset.name_change_parameters)
+
+        state.set_watcher(CURRENT_PRESET, load_ext)
+        state.set_watcher(CURRENT_PRESET, load_transformations)
+        state.set_watcher(CURRENT_PRESET, load_name_changer)
+
         state.set_prop(CURRENT_PRESET, preset)
+
         logger.debug(self.ext_box.options)
 
-        if not self.ext_locked:
-            self.ext_box.load_from_state(preset.ext)
-        if not self.transforms_locked:
-            self.transforms_box.load_from_state(preset.transformations)
-        if not self.name_locked:
-            self.name_changer.load_state(preset.name_changer)
-
     def rename_preset(self, preset_id, new_name):
-        Preset.rename(preset_id, new_name)
+        PresetModel.rename(preset_id, new_name)
         self.reload_presets()
 
     def remove_preset(self, preset_id):
         logger.debug(f"Deleting preset with id {preset_id}")
-        Preset.delete_by_id(preset_id)
+        PresetModel.delete_by_id(preset_id)
         self.reload_presets()
 
     def get_transformations(self):

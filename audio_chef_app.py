@@ -13,7 +13,7 @@ import peewee
 from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
 from models import db_proxy
-from models.preset import Preset
+from models.preset import PresetModel
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
 from utils.event_dispatcher import dispatcher
 from utils.state import State, state
@@ -53,7 +53,7 @@ class AudioChefApp(kivy.app.App):
         logger.info("Initializing database ...")
         db = peewee.SqliteDatabase("presets.db")
         db_proxy.initialize(db)
-        db.create_tables([Preset])
+        db.create_tables([PresetModel])
 
         logger.debug("Binding dropfile event ...")
         kivy.core.window.Window.clearcolor = app.window_background_color
@@ -64,7 +64,7 @@ class AudioChefApp(kivy.app.App):
         kivy.core.window.Window.minimum_width = self.min_width
         kivy.core.window.Window.minimum_height = self.min_height
         if self.config.has_option("Window", "top") and self.config.has_option(
-                "Window", "left"
+            "Window", "left"
         ):
             kivy.core.window.Window.top = self.config.getint("Window", "top")
             kivy.core.window.Window.left = self.config.getint("Window", "left")

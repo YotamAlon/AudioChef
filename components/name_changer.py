@@ -5,6 +5,7 @@ from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 
 from kivy_helpers import toggle_widget
+from models.preset import NameChangeParameters
 from utils.event_dispatcher import dispatcher
 from utils.state import state
 
@@ -51,9 +52,9 @@ class NameChanger(BoxLayout):
             "replace_to_input": self.ids.replace_to_input.text,
         }
 
-    def load_state(self, state):
+    def load_state(self, state: NameChangeParameters):
         logger.debug(f"NameChanger: loading state {state}")
-        self.mode = state["mode"]
-        self.ids.wildcards_input.text = state["wildcards_input"]
-        self.ids.replace_from_input.text = state["replace_from_input"]
-        self.ids.replace_to_input.text = state["replace_to_input"]
+        self.mode = state.mode
+        self.ids.wildcards_input.text = state.wildcards_input
+        self.ids.replace_from_input.text = state.replace_from_input
+        self.ids.replace_to_input.text = state.replace_to_input

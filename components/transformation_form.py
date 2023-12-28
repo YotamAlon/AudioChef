@@ -4,6 +4,7 @@ from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 
 from components.transformation_parameter_popup import TransformationParameterPopup
+from models.preset import Transformation
 from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
@@ -48,12 +49,17 @@ class TransformationForm(BoxLayout):
 
     def update_arg_values(self, arg_values: dict):
         self.arg_values = arg_values
-        logger.debug(f"Arguments for {self.selected_transformation_name} updated to {arg_values}")
+        logger.debug(
+            f"Arguments for {self.selected_transformation_name} updated to {arg_values}"
+        )
 
     def get_selected_tranform_and_args(self):
         if self.selected_transformation_name is None:
             return None
-        return TRANSFORMATIONS[self.selected_transformation_name].transform, self.arg_values
+        return (
+            TRANSFORMATIONS[self.selected_transformation_name].transform,
+            self.arg_values,
+        )
 
     def load_args_dict(self, args_dict: dict):
         self.arg_values = args_dict
@@ -64,13 +70,16 @@ class TransformationForm(BoxLayout):
     def get_state(self):
         if self.selected_transformation_name is None:
             return None
-        return {"transform_name": self.selected_transformation_name, "args": self.arg_values}
+        return {
+            "transform_name": self.selected_transformation_name,
+            "args": self.arg_values,
+        }
 
-    def load_state(self, state):
+    def load_state(self, state: Transformation):
         logger.debug(f"TransformationForm ({id(self)}): loading state {state}")
         if state is None:
             return
 
-        self.selected_transformation_name = state["transform_name"]
-        self.ids.spinner.text = state["transform_name"]
-        self.load_args_dict(state["args"])
+        self.selected_transformation_name = state.name
+        self.ids.spinner.text = state.name
+        self.load_args_dict(state.params)
