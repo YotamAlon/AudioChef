@@ -1,7 +1,8 @@
+import dataclasses
 import uuid
 from typing import List
 
-from kivy.properties import ObjectProperty, BooleanProperty
+from kivy.properties import ObjectProperty, BooleanProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 
@@ -12,12 +13,11 @@ from components.helper_classes import (
 )
 from components.name_changer import NameChanger
 from components.transformation_form import TransformationForm
+from consts import CURRENT_PRESET
 from controller import logger, Controller
 from models.preset import PresetModel, Preset, Transformation, NameChangeParameters
 from utils.audio_formats import AudioFile
 from utils.state import state
-
-CURRENT_PRESET = "current_preset"
 
 
 class ExtensionBox(OptionsBox):
@@ -60,6 +60,19 @@ class AudioChefWindow(BoxLayout):
         default_preset_id = PresetModel.get_or_none(default=True)
         if default_preset_id:
             self.load_preset(default_preset_id)
+        else:
+            preset = Preset(
+                name="",
+                ext="",
+                transformations=[],
+                name_change_parameters=NameChangeParameters(
+                    mode="replace",
+                    wildcards_input="",
+                    replace_from_input="",
+                    replace_to_input="",
+                ),
+            )
+            state.set_prop(CURRENT_PRESET, preset)
 
     def reload_presets(self):
         presets = PresetModel.select()
@@ -84,9 +97,10 @@ class AudioChefWindow(BoxLayout):
         Controller.execute_preset(output_ext, selected_files, transformations)
 
     def save_preset(self):
+        current_preset: Preset = state.get_prop(CURRENT_PRESET)
         preset = PresetModel.create(
             name=str(uuid.uuid4()),
-            ext=state.get_prop("output_ext", ""),
+            ext=current_preset.ext,
             transformations=[
                 child.get_state() for child in self.transforms_box.children[::-1]
             ],
@@ -116,24 +130,18 @@ class AudioChefWindow(BoxLayout):
             ),
         )
 
-        def load_ext(preset: Preset):
+        def load_preset(preset: Preset):
             if not self.ext_locked:
                 self.ext_box.load_from_state(preset.ext)
 
-        def load_transformations(preset: Preset):
             if not self.transforms_locked:
                 self.transforms_box.load_from_state(preset.transformations)
 
-        def load_name_changer(preset: Preset):
             if not self.name_locked:
                 self.name_changer.load_state(preset.name_change_parameters)
 
-        state.set_watcher(CURRENT_PRESET, load_ext)
-        state.set_watcher(CURRENT_PRESET, load_transformations)
-        state.set_watcher(CURRENT_PRESET, load_name_changer)
-
+        state.set_watcher(CURRENT_PRESET, load_preset)
         state.set_prop(CURRENT_PRESET, preset)
-
         logger.debug(self.ext_box.options)
 
     def rename_preset(self, preset_id, new_name):
@@ -150,3 +158,12 @@ class AudioChefWindow(BoxLayout):
             child.get_selected_tranform_and_args()
             for child in self.transforms_box.children
         ]
+
+
+class ExtBox(BoxLayout):
+    ext_text = StringProperty()
+
+    def on_ext_text(self, *_):
+        preset: Preset = state.get_prop(CURRENT_PRESET)
+        new_preset = dataclasses.replace(preset, ext=self.ext_text)
+        state.set_prop(CURRENT_PRESET, new_preset)

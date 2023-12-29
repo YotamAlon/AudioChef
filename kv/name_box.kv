@@ -19,6 +19,9 @@
 
 
 <NameChanger>:
+    wildcards_input_text: wildcards_input.text
+    replace_to_input_text: replace_to_input.text
+    replace_from_input_text: replace_from_input.text
     orientation: 'vertical'
     BoxLayout:
         size_hint_y: None
@@ -48,12 +51,10 @@
         GridLayout:
             cols: 2
             Label:
-                id: replace_from_label
                 height: 25
                 size_hint_y: None
                 text: 'Replace this:'
             Label:
-                id: replace_to_label
                 height: 25
                 size_hint_y: None
                 text: 'With this:'

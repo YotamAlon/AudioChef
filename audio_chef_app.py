@@ -1,4 +1,5 @@
 import configparser
+import dataclasses
 import json
 import logging
 
@@ -12,8 +13,9 @@ import peewee
 
 from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
+from consts import CURRENT_PRESET
 from models import db_proxy
-from models.preset import PresetModel
+from models.preset import PresetModel, NameChangeParameters
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
 from utils.event_dispatcher import dispatcher
 from utils.state import State, state
@@ -159,6 +161,16 @@ class AudioChefApp(kivy.app.App):
             settings.add_json_panel(
                 transformation_name, self.config, data=json.dumps(arguments_list)
             )
+
+    @staticmethod
+    def update_name_change_parameters(
+        new_name_change_parameters: NameChangeParameters,
+    ) -> None:
+        preset = state.get_prop(CURRENT_PRESET)
+        new_preset = dataclasses.replace(
+            preset, name_change_parameters=new_name_change_parameters
+        )
+        state.set_prop(CURRENT_PRESET, new_preset)
 
 
 class CriticalExceptionHandler(kivy.base.ExceptionHandler):

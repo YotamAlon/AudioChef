@@ -1,4 +1,5 @@
 import dataclasses
+from datetime import datetime
 
 from peewee import Model, CharField, BooleanField
 
@@ -17,6 +18,17 @@ class NameChangeParameters:
     wildcards_input: str
     replace_from_input: str
     replace_to_input: str
+
+    def change_name(self, old_name: str) -> str:
+        if self.mode == "wildcards":
+            new_name = self.wildcards_input
+            new_name = new_name.replace("$item", old_name)
+            new_name = new_name.replace("$date", str(datetime.today()))
+            return new_name
+        else:
+            if self.replace_from_input == "":
+                return old_name
+            return old_name.replace(self.replace_from_input, self.replace_to_input)
 
 
 @dataclasses.dataclass(frozen=True)
