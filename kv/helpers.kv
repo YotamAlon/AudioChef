@@ -20,7 +20,7 @@
     CheckBox:
         group: 'default_preset'
         active: root.default
-        on_active: root.make_default(root.preset_id, self.active)
+        on_active: if self.active: root.make_default(root.preset_id)
     Button:
         canvas:
             Rectangle:
