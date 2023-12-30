@@ -98,7 +98,7 @@ class PresetRepository:
             ext=model.ext,
             transformations=[
                 Transformation(
-                    name=transformation["transform_name"], params=transformation["args"]
+                    name=transformation["name"], params=transformation["params"]
                 )
                 for transformation in model.transformations
             ],

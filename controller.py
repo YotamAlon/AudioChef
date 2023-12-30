@@ -1,19 +1,27 @@
 import logging
 import os
+import typing
 
 import pedalboard
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 
 from components.helper_classes import UnexecutableRecipeError
+from models.preset import Transformation
 from utils.audio_formats import AudioFile, SUPPORTED_AUDIO_FORMATS
+from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
 
 
 class Controller:
     @classmethod
-    def execute_preset(cls, output_ext, selected_files, transformations) -> None:
+    def execute_preset(
+        cls,
+        output_ext: str,
+        selected_files: list[AudioFile],
+        transformations: list[Transformation],
+    ) -> None:
         try:
             cls.check_input_file_formats(selected_files=selected_files)
             cls.check_output_file_formats(output_ext)
@@ -62,15 +70,24 @@ class Controller:
             )
 
     @staticmethod
-    def check_selected_transformation(transformations: list) -> None:
+    def check_selected_transformation(transformations: list[Transformation]) -> None:
         if len(transformations) == 0 or any(
-            transform is None for transform in transformations
+            transform.name is None for transform in transformations
         ):
             raise UnexecutableRecipeError("You must choose a transformation to apply")
 
-    @staticmethod
-    def prepare_board(transformations: list) -> pedalboard.Pedalboard:
+    @classmethod
+    def prepare_board(
+        cls, transformations: list[Transformation]
+    ) -> pedalboard.Pedalboard:
         logger.debug(transformations)
         return pedalboard.Pedalboard(
-            [transform(**kwargs) for transform, kwargs in transformations]
+            [
+                cls.get_transform_class(transform.name)(**transform.params)
+                for transform in transformations
+            ]
         )
+
+    @staticmethod
+    def get_transform_class(transform_name: str) -> typing.Type[pedalboard.Plugin]:
+        return TRANSFORMATIONS[transform_name].transform

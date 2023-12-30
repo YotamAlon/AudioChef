@@ -7,7 +7,6 @@ from kivy.uix.boxlayout import BoxLayout
 from components.transformation_parameter_popup import TransformationParameterPopup
 from consts import CURRENT_PRESET
 from models.preset import Transformation, Preset
-from utils.functions import find_first
 from utils.state import state
 from utils.transformations import TRANSFORMATIONS
 
@@ -33,12 +32,18 @@ class TransformationForm(BoxLayout):
         parent = self.parent
         parent.remove_widget(self)
         parent.add_widget(self, self_index + 1)
+        preset: Preset = state.get_prop(CURRENT_PRESET)
+        new_preset = Preset.move_transform(preset, self.index, self.index + 1)
+        state.set_prop(CURRENT_PRESET, new_preset)
 
     def shift_down(self):
         self_index = self.parent.children.index(self)
         parent = self.parent
         parent.remove_widget(self)
         parent.add_widget(self, max(self_index - 1, 0))
+        preset: Preset = state.get_prop(CURRENT_PRESET)
+        new_preset = Preset.move_transform(preset, self.index, max(self.index - 1, 0))
+        state.set_prop(CURRENT_PRESET, new_preset)
 
     def select_transformation(self, transform_name: str):
         if transform_name == self.selected_transformation_name:
@@ -47,19 +52,14 @@ class TransformationForm(BoxLayout):
         preset: Preset = state.get_prop(CURRENT_PRESET)
         transform = preset.transformations[self.index]
         new_transform = dataclasses.replace(transform, name=transform_name)
-        new_transformations = preset.transformations[:]
-        new_transformations[self.index] = new_transform
-        new_preset = dataclasses.replace(preset, transformations=new_transformations)
+        new_preset = Preset.replace_transform_at(preset, self.index, new_transform)
         state.set_prop(CURRENT_PRESET, new_preset)
         self.ids.args_box.clear_widgets()
 
     def open_parameter_popup(self):
         if self.selected_transformation_name:
             preset: Preset = state.get_prop(CURRENT_PRESET)
-            transform = find_first(
-                preset.transformations,
-                lambda t: t.name == self.selected_transformation_name,
-            )
+            transform = preset.transformations[self.index]
             if transform.show_editor:
                 transform.show_editor()
             else:
@@ -75,6 +75,11 @@ class TransformationForm(BoxLayout):
 
     def update_arg_values(self, arg_values: dict):
         self.arg_values = arg_values
+        preset: Preset = state.get_prop(CURRENT_PRESET)
+        transform = preset.transformations[self.index]
+        new_transform = dataclasses.replace(transform, params=arg_values)
+        new_preset = preset.replace_transform_at(preset, self.index, new_transform)
+        state.set_prop(CURRENT_PRESET, new_preset)
         logger.debug(
             f"Arguments for {self.selected_transformation_name} updated to {arg_values}"
         )

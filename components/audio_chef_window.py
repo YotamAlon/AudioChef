@@ -111,7 +111,7 @@ class AudioChefWindow(BoxLayout):
         preset = state.get_prop(CURRENT_PRESET)
         transformations = self.get_transformations()
         selected_files: List[AudioFile] = state.get_prop("selected_files")
-        Controller.execute_preset(preset.ext, selected_files, transformations)
+        Controller.execute_preset(preset.ext, selected_files, preset.transformations)
 
     def save_preset(self):
         current_preset: Preset = state.get_prop(CURRENT_PRESET)

@@ -35,6 +35,25 @@ class Preset:
     transformations: list[Transformation]
     name_change_parameters: NameChangeParameters
 
+    @classmethod
+    def replace_transform_at(
+        cls, preset: typing.Self, index: int, new_transform: Transformation
+    ) -> typing.Self:
+        new_transformations = preset.transformations[:]
+        new_transformations[index] = new_transform
+        new_preset = dataclasses.replace(preset, transformations=new_transformations)
+        return new_preset
+
+    @classmethod
+    def move_transform(
+        cls, preset: typing.Self, from_index: int, to_index: int
+    ) -> typing.Self:
+        new_transformations = preset.transformations[:]
+        transform = new_transformations.pop(from_index)
+        new_transformations.insert(to_index, transform)
+        new_preset = dataclasses.replace(preset, transformations=new_transformations)
+        return new_preset
+
 
 @dataclasses.dataclass(frozen=True)
 class PresetMetadata:
