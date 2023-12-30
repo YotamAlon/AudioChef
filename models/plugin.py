@@ -1,10 +1,7 @@
-from peewee import Model, CharField, BlobField
-from models import db_proxy
+import dataclasses
 
 
-class Plugin(Model):
-    name = CharField(max_length=255)
-    vst3_file = BlobField()
-
-    class Meta:
-        db = db_proxy
+@dataclasses.dataclass(frozen=True)
+class Plugin:
+    path: str
+    params: dict

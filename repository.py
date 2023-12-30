@@ -1,9 +1,10 @@
 import dataclasses
+import json
 import uuid
 
-from peewee import Model, CharField, BooleanField
+import peewee
+from peewee import DatabaseProxy
 
-from models import JSONField, db_proxy
 from models.preset import (
     Preset,
     Transformation,
@@ -11,11 +12,22 @@ from models.preset import (
     PresetMetadata,
 )
 
+db_proxy = DatabaseProxy()
 
-class PresetModel(Model):
-    name = CharField(max_length=255)
-    default = BooleanField(default=False)
-    ext = CharField(max_length=64, default="")
+
+class JSONField(peewee.TextField):
+    def db_value(self, value):
+        return json.dumps(value)
+
+    def python_value(self, value):
+        if value is not None:
+            return json.loads(value)
+
+
+class PresetModel(peewee.Model):
+    name = peewee.CharField(max_length=256)
+    default = peewee.BooleanField(default=False)
+    ext = peewee.CharField(max_length=64, default="")
     transformations = JSONField()
     name_changer = JSONField()
 
@@ -97,3 +109,12 @@ class PresetRepository:
                 replace_to_input=model.name_changer["replace_to_input"],
             ),
         )
+
+
+class Plugin(peewee.Model):
+    name = peewee.CharField(max_length=256)
+    path = peewee.CharField(max_length=2048)
+    params = JSONField()
+
+    class Meta:
+        db = db_proxy

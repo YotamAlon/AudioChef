@@ -1,11 +1,13 @@
 import dataclasses
+import typing
 from datetime import datetime
 
 
 @dataclasses.dataclass(frozen=True)
 class Transformation:
-    name: str
+    name: str | None
     params: dict
+    show_editor: typing.Callable[[], None] | None = None
 
 
 @dataclasses.dataclass(frozen=True)

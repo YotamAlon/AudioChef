@@ -34,7 +34,12 @@ class TransformsBox2(BoxLayout):
             self.children[0].load_state(transform)
 
     def add_transform_item(self, *_):
-        self.add_widget(TransformationForm(remove_callback=self.remove_widget))
+        preset: Preset = state.get_prop(CURRENT_PRESET)
+        transformations = preset.transformations + [
+            Transformation(name=None, params={})
+        ]
+        new_preset = dataclasses.replace(preset, transformations=transformations)
+        state.set_prop(CURRENT_PRESET, new_preset)
 
 
 class AudioChefWindow(BoxLayout):

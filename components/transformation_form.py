@@ -1,10 +1,14 @@
+import dataclasses
 import logging
 
 from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 
 from components.transformation_parameter_popup import TransformationParameterPopup
-from models.preset import Transformation
+from consts import CURRENT_PRESET
+from models.preset import Transformation, Preset
+from utils.functions import find_first
+from utils.state import state
 from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
@@ -19,6 +23,11 @@ class TransformationForm(BoxLayout):
         self.selected_transformation_name: str = None
         self.arg_values = {}
 
+    @property
+    def index(self) -> int:
+        self_index = self.parent.children.index(self)
+        return len(self.parent.children) - self_index - 1
+
     def shift_up(self):
         self_index = self.parent.children.index(self)
         parent = self.parent
@@ -31,18 +40,35 @@ class TransformationForm(BoxLayout):
         parent.remove_widget(self)
         parent.add_widget(self, max(self_index - 1, 0))
 
-    def select_transformation(self, transform_name):
+    def select_transformation(self, transform_name: str):
+        if transform_name == self.selected_transformation_name:
+            return
         self.selected_transformation_name = transform_name
+        preset: Preset = state.get_prop(CURRENT_PRESET)
+        transform = preset.transformations[self.index]
+        new_transform = dataclasses.replace(transform, name=transform_name)
+        new_transformations = preset.transformations[:]
+        new_transformations[self.index] = new_transform
+        new_preset = dataclasses.replace(preset, transformations=new_transformations)
+        state.set_prop(CURRENT_PRESET, new_preset)
         self.ids.args_box.clear_widgets()
 
     def open_parameter_popup(self):
         if self.selected_transformation_name:
-            TransformationParameterPopup(
-                self.selected_transformation_name,
-                TRANSFORMATIONS[self.selected_transformation_name].arguments,
-                title=f"Edit {self.selected_transformation_name} parameters",
-                save_callback=self.update_arg_values,
-            ).open()
+            preset: Preset = state.get_prop(CURRENT_PRESET)
+            transform = find_first(
+                preset.transformations,
+                lambda t: t.name == self.selected_transformation_name,
+            )
+            if transform.show_editor:
+                transform.show_editor()
+            else:
+                TransformationParameterPopup(
+                    self.selected_transformation_name,
+                    TRANSFORMATIONS[self.selected_transformation_name].arguments,
+                    title=f"Edit {self.selected_transformation_name} parameters",
+                    save_callback=self.update_arg_values,
+                ).open()
         else:
             # TODO: Open a popup here to let the user know he must select a transformation first
             pass
@@ -81,5 +107,5 @@ class TransformationForm(BoxLayout):
             return
 
         self.selected_transformation_name = state.name
-        self.ids.spinner.text = state.name
+        self.ids.spinner.text = state.name or ""
         self.load_args_dict(state.params)

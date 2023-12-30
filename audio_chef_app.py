@@ -14,9 +14,8 @@ import peewee
 from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
 from consts import CURRENT_PRESET
-from models import db_proxy
 from models.preset import NameChangeParameters
-from repository import PresetModel
+from repository import PresetModel, db_proxy
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
 from utils.event_dispatcher import dispatcher
 from utils.state import State, state
