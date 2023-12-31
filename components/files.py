@@ -15,7 +15,6 @@ from utils.audio_formats import (
     SUPPORTED_AUDIO_FORMATS,
     NoCompatibleAudioFormatException,
 )
-from utils.event_dispatcher import dispatcher
 from utils.state import state
 
 logger = logging.getLogger("audiochef")
@@ -30,7 +29,6 @@ class FileList(GridLayout):
     def on_kv_post(self, base_widget):
         Window.bind(on_drop_file=self.add_file)
         state.set_watcher(CURRENT_PRESET, self.update_filenames)
-        dispatcher.bind(on_clear_files=self.clear_files)
 
     def add_file(self, window, filename: bytes, x, y):
         filename = filename.decode()

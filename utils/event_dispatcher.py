@@ -7,12 +7,8 @@ class Dispatcher(EventDispatcher):
 
     def __init__(self: Widget, **kwargs):
         super().__init__(**kwargs)
-        self.register_event_type("on_clear_files")
         self.register_event_type("on_name_changer_update")
         self.register_event_type("on_output_format_update")
-
-    def on_clear_files(self, *args, **kwargs):
-        pass
 
     def on_name_changer_update(self, *args, **kwargs):
         pass

@@ -76,7 +76,9 @@ class AudioChefApp(kivy.app.App):
         kivy.core.window.Window.bind(on_request_close=self.window_request_close)
         kivy.core.window.Window.bind(on_maximize=self.set_window_maximized_state)
         kivy.core.window.Window.bind(on_restore=self.set_window_restored_state)
-        return AudioChefWindow()
+        audio_chef_window = AudioChefWindow()
+        # inspector.create_inspector(kivy.core.window.Window, audio_chef_window)
+        return audio_chef_window
 
     def set_window_maximized_state(self, window):
         self.config.set("Window", "maximized", "true")

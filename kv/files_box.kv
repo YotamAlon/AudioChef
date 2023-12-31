@@ -16,7 +16,7 @@
             text: 'Clear all files'
             width: 150
             size_hint_x: None
-            on_release: self.dispatch('on_clear_files')
+            on_release: file_list.clear_files()
     ScrollView:
         FileList:
             id: file_list
