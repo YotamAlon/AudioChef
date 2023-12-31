@@ -23,7 +23,6 @@ class AudioChefWindow(BoxLayout):
     ext_box: ExtBox = ObjectProperty()
     ext_locked = BooleanProperty()
     transforms_box: TransformsBox = ObjectProperty()
-    transforms_locked: BooleanProperty()
     presets_box: Widget = ObjectProperty()
 
     def __init__(self, **kwargs):
@@ -59,8 +58,7 @@ class AudioChefWindow(BoxLayout):
         if not self.ext_locked:
             self.ext_box.load_from_state(preset.ext)
 
-        if not self.transforms_locked:
-            self.transforms_box.load_from_state(preset.transformations)
+        self.transforms_box.load_from_state(preset.transformations)
 
         if not self.name_locked:
             self.name_changer.load_state(preset.name_change_parameters)
@@ -84,7 +82,8 @@ class AudioChefWindow(BoxLayout):
             )
         )
 
-    def execute_preset(self) -> None:
+    @staticmethod
+    def execute_preset() -> None:
         preset = state.get_prop(CURRENT_PRESET)
         selected_files: List[AudioFile] = state.get_prop("selected_files")
         Controller.execute_preset(preset.ext, selected_files, preset.transformations)
@@ -94,7 +93,8 @@ class AudioChefWindow(BoxLayout):
         preset_metadata = PresetRepository.save_preset(current_preset)
         self._add_preset_button(preset_metadata)
 
-    def load_preset(self, preset_id: int) -> None:
+    @staticmethod
+    def load_preset(preset_id: int) -> None:
         preset = PresetRepository.get_by_id(preset_id)
         state.set_prop(CURRENT_PRESET, preset)
 

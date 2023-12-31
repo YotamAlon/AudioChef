@@ -11,6 +11,9 @@ from utils.state import state
 
 class TransformsBox(BoxLayout):
     def load_from_state(self, transformations: list[Transformation]) -> None:
+        if not self.ids.lock.selected:
+            return
+
         self.ids.transforms_box.clear_widgets()
         for transform in transformations:
             self.ids.transforms_box.add_widget(
