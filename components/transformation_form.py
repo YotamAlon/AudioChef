@@ -84,14 +84,6 @@ class TransformationForm(BoxLayout):
             f"Arguments for {self.selected_transformation_name} updated to {arg_values}"
         )
 
-    def get_selected_tranform_and_args(self):
-        if self.selected_transformation_name is None:
-            return None
-        return (
-            TRANSFORMATIONS[self.selected_transformation_name].transform,
-            self.arg_values,
-        )
-
     def load_args_dict(self, args_dict: dict):
         self.arg_values = args_dict
 

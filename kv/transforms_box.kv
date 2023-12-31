@@ -27,11 +27,11 @@
                         pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
                         size: [min(self.size)] * 2
                         source: 'assets/icons/plus.png'
-                on_release: app.dispatcher.dispatch('on_add_transform_item')
+                on_release: root.add_transform_item_click_handler()
         BoxLayout:
             orientation: 'vertical'
             ScrollView:
-                TransformsBox2:
+                BoxLayout:
                     id: transforms_box
                     orientation: 'vertical'
                     height: 40 * len(self.children)

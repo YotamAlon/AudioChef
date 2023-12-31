@@ -1,11 +1,12 @@
 <ExtBox@BoxLayout>:
-    ext_text: ext_box.text
+    ext_text: ext_input.text
     orientation: 'vertical'
     BoxLayout:
         orientation: 'horizontal'
-        ExtensionBox:
-            id: ext_box
+        OptionsBox:
+            id: ext_input
             name: "Choose the output format (empty means the same as the input if supported)"
+            text: root.ext_text
             options: [""] + [format_.ext.lower() for format_ in app.supported_audio_formats if format_.can_encode]
         SelectableButton:
             selected: True
