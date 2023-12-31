@@ -21,9 +21,7 @@
     name_changer: name_item.ids.name_changer
     name_locked: bool(name_item.locked)
     ext_box: ext_item
-    ext_locked: bool(ext_item.locked)
     transforms_box: transforms_item
-    transforms_locked: bool(transforms_item.locked)
     presets_box: presets_box
     BoxLayout:
         orientation: 'horizontal'
@@ -69,7 +67,6 @@
                     id: ext_item
                     size_hint_y: None
                     height: 30
-                    locked: bool(root.ext_locked)
                     canvas.before:
                         Color:
                             rgba: 0, 0, 0, 1
@@ -89,7 +86,6 @@
                             rectangle: self.x, self.y, self.width, self.height
                 TransformsBox:
                     id: transforms_item
-                    locked: bool(root.transforms_locked)
                     canvas.before:
                         Color:
                             rgba: 0, 0, 0, 1

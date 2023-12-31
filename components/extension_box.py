@@ -17,4 +17,6 @@ class ExtBox(BoxLayout):
         state.set_prop(CURRENT_PRESET, new_preset)
 
     def load_from_state(self, ext: str) -> None:
+        if not self.ids.lock.selected:
+            return
         self.ext_text = ext

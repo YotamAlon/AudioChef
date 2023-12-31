@@ -9,9 +9,9 @@
             text: root.ext_text
             options: [""] + [format_.ext.lower() for format_ in app.supported_audio_formats if format_.can_encode]
         SelectableButton:
+            id: lock
             selected: True
             text: 'Lock'
             on_release:
                 self.selected = not self.selected
-                root.locked = not self.selected
                 self.text = 'Lock' if self.selected else 'Unlock'

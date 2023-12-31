@@ -21,7 +21,6 @@ class AudioChefWindow(BoxLayout):
     name_changer: NameChanger = ObjectProperty()
     name_locked = BooleanProperty()
     ext_box: ExtBox = ObjectProperty()
-    ext_locked = BooleanProperty()
     transforms_box: TransformsBox = ObjectProperty()
     presets_box: Widget = ObjectProperty()
 
@@ -55,8 +54,7 @@ class AudioChefWindow(BoxLayout):
         return consts.CURRENT_NAME_CHANGE_PARAMS, preset.name_change_parameters
 
     def _load_preset_into_ui(self, preset: Preset):
-        if not self.ext_locked:
-            self.ext_box.load_from_state(preset.ext)
+        self.ext_box.load_from_state(preset.ext)
 
         self.transforms_box.load_from_state(preset.transformations)
 
