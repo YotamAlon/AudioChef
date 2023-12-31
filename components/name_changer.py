@@ -11,7 +11,7 @@ from utils.state import state
 logger = logging.getLogger("audiochef")
 
 
-class NameChanger(BoxLayout):
+class NameChangerBox(BoxLayout):
     _wildcards = ["$item", "$date"]
     mode = StringProperty("replace")
     preview_callback = ObjectProperty()
@@ -39,21 +39,21 @@ class NameChanger(BoxLayout):
 
     def update_state(self, *_):
         new_name_change_parameters = NameChangeParameters(
-            mode=self.mode,
-            wildcards_input=self.wildcards_input_text,
-            replace_from_input=self.replace_from_input_text,
-            replace_to_input=self.replace_to_input_text,
+            mode=self.ids.name_changer.mode,
+            wildcards_input=self.ids.name_changer.wildcards_input_text,
+            replace_from_input=self.ids.name_changer.replace_from_input_text,
+            replace_to_input=self.ids.name_changer.replace_to_input_text,
         )
         state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
 
     def switch_widgets(self):
-        for widget_name in self.ids:
-            hide = not widget_name.startswith(self.mode)
-            toggle_widget(self.ids[widget_name], hide)
+        for widget_name in self.ids.name_changer.ids:
+            hide = not widget_name.startswith(self.ids.name_changer.mode)
+            toggle_widget(self.ids.name_changer.ids[widget_name], hide)
 
     def load_state(self, state: NameChangeParameters):
         logger.debug(f"NameChanger: loading state {state}")
-        self.mode = state.mode
-        self.ids.wildcards_input.text = state.wildcards_input
-        self.ids.replace_from_input.text = state.replace_from_input
-        self.ids.replace_to_input.text = state.replace_to_input
+        self.ids.name_changer.mode = state.mode
+        self.ids.name_changer.ids.wildcards_input.text = state.wildcards_input
+        self.ids.name_changer.ids.replace_from_input.text = state.replace_from_input
+        self.ids.name_changer.ids.replace_to_input.text = state.replace_to_input

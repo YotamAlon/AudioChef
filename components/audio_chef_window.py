@@ -7,7 +7,7 @@ from kivy.uix.widget import Widget
 import consts
 from components.extension_box import ExtBox
 from components.helper_classes import PresetButton
-from components.name_changer import NameChanger
+from components.name_changer import NameChangerBox
 from components.transforms_box import TransformsBox
 from consts import CURRENT_PRESET
 from controller import Controller
@@ -18,7 +18,7 @@ from utils.state import state
 
 
 class AudioChefWindow(BoxLayout):
-    name_changer: NameChanger = ObjectProperty()
+    name_changer: NameChangerBox = ObjectProperty()
     name_locked = BooleanProperty()
     ext_box: ExtBox = ObjectProperty()
     transforms_box: TransformsBox = ObjectProperty()

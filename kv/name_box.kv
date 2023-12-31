@@ -1,4 +1,4 @@
-<NameBox@BoxLayout>:
+<NameChangerBox@BoxLayout>:
     orientation: 'vertical'
     BoxLayout:
         orientation: 'horizontal'
@@ -18,7 +18,8 @@
                 self.text = 'Lock' if self.selected else 'Unlock'
 
 
-<NameChanger>:
+<NameChanger@BoxLayout>:
+    mode: 'replace'
     wildcards_input_text: wildcards_input.text
     replace_to_input_text: replace_to_input.text
     replace_from_input_text: replace_from_input.text

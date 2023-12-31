@@ -18,8 +18,7 @@
             size: self.size[0] - 100, self.size[1] - 100
             source: 'assets/chef_hat.png'
     orientation: 'vertical'
-    name_changer: name_item.ids.name_changer
-    name_locked: bool(name_item.locked)
+    name_changer: name_item
     ext_box: ext_item
     transforms_box: transforms_item
     presets_box: presets_box
@@ -73,11 +72,10 @@
                         Line:
                             width: 1
                             rectangle: self.x, self.y, self.width, self.height
-                NameBox:
+                NameChangerBox:
                     id: name_item
                     height: 85
                     size_hint_y: None
-                    locked: bool(root.name_locked)
                     canvas.before:
                         Color:
                             rgba: 0, 0, 0, 1
