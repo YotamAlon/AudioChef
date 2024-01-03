@@ -11,11 +11,12 @@ import kivy.metrics
 import kivy.uix.settings
 import peewee
 
+import consts
 from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
 from consts import CURRENT_PRESET
 from models.preset import NameChangeParameters, Transformation, Preset
-from repository import PresetModel, db_proxy
+from repository import PresetModel, db_proxy, PresetRepository
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
 from utils.event_dispatcher import dispatcher
 from utils.state import State, state
@@ -40,6 +41,7 @@ class AudioChefApp(kivy.app.App):
     min_height = 720
     dispatcher = dispatcher
     supported_audio_formats = SUPPORTED_AUDIO_FORMATS
+    audio_chef_window: AudioChefWindow
 
     def __init__(self):
         logger.setLevel(self.log_level)
@@ -66,7 +68,7 @@ class AudioChefApp(kivy.app.App):
         kivy.core.window.Window.minimum_width = self.min_width
         kivy.core.window.Window.minimum_height = self.min_height
         if self.config.has_option("Window", "top") and self.config.has_option(
-                "Window", "left"
+            "Window", "left"
         ):
             kivy.core.window.Window.top = self.config.getint("Window", "top")
             kivy.core.window.Window.left = self.config.getint("Window", "left")
@@ -76,9 +78,29 @@ class AudioChefApp(kivy.app.App):
         kivy.core.window.Window.bind(on_request_close=self.window_request_close)
         kivy.core.window.Window.bind(on_maximize=self.set_window_maximized_state)
         kivy.core.window.Window.bind(on_restore=self.set_window_restored_state)
-        audio_chef_window = AudioChefWindow()
+        self.audio_chef_window = AudioChefWindow()
+        default_preset = PresetRepository.get_default()
+        if default_preset:
+            preset = default_preset
+        else:
+            preset = Preset(
+                ext="",
+                transformations=[],
+                name_change_parameters=NameChangeParameters(
+                    mode="replace",
+                    wildcards_input="",
+                    replace_from_input="",
+                    replace_to_input="",
+                ),
+            )
+
+        self.update_ext(preset.ext)
+        state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, preset.name_change_parameters)
+        self.audio_chef_window.update_name_changer_to_ui(preset.name_change_parameters)
+        state.set_prop(consts.CURRENT_TRANSFORMATIONS, preset.transformations)
+        self.audio_chef_window.update_transformations_to_ui(preset.transformations)
         # inspector.create_inspector(kivy.core.window.Window, audio_chef_window)
-        return audio_chef_window
+        return self.audio_chef_window
 
     def set_window_maximized_state(self, window):
         self.config.set("Window", "maximized", "true")
@@ -165,30 +187,125 @@ class AudioChefApp(kivy.app.App):
             )
 
     @staticmethod
-    def update_name_change_parameters(
-            new_name_change_parameters: NameChangeParameters,
-    ) -> None:
-        preset: Preset = state.get_prop(CURRENT_PRESET)
-        new_preset = dataclasses.replace(
-            preset, name_change_parameters=new_name_change_parameters
-        )
-        state.set_prop(CURRENT_PRESET, new_preset)
-
-    @staticmethod
     def update_transformations(new_transformations: list[Transformation]) -> None:
         preset: Preset = state.get_prop(CURRENT_PRESET)
-        new_preset = dataclasses.replace(
-            preset, transformations=new_transformations
-        )
+        new_preset = dataclasses.replace(preset, transformations=new_transformations)
         state.set_prop(CURRENT_PRESET, new_preset)
 
-    @staticmethod
-    def update_ext(new_ext: str) -> None:
-        preset: Preset = state.get_prop(CURRENT_PRESET)
-        new_preset = dataclasses.replace(
-            preset, ext=new_ext
+    def update_ext(self, new_ext: str) -> None:
+        state.set_prop(consts.CURRENT_EXT, new_ext)
+        self.audio_chef_window.update_ext_to_ui(new_ext)
+
+    def add_transform_item_click_handler(self):
+        transformations: list[Transformation] = state.get_prop(
+            consts.CURRENT_TRANSFORMATIONS
         )
-        state.set_prop(CURRENT_PRESET, new_preset)
+        new_transformations = transformations + [Transformation(name=None, params={})]
+        state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
+        self.audio_chef_window.update_transformations_to_ui(new_transformations)
+
+    def remove_transform_item(self, transform_index: int) -> None:
+        transformations: list[Transformation] = state.get_prop(
+            consts.CURRENT_TRANSFORMATIONS
+        )
+        new_transformations = (
+            transformations[:transform_index] + transformations[transform_index + 1 :]
+        )
+        state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
+        self.audio_chef_window.update_transformations_to_ui(new_transformations)
+
+    def shift_up(self, index: int):
+        transformations: list[Transformation] = state.get_prop(
+            consts.CURRENT_TRANSFORMATIONS
+        )
+        new_transformations = self._move_transform(transformations, index, index + 1)
+        state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
+        self.audio_chef_window.update_transformations_to_ui(new_transformations)
+
+    def shift_down(self, index: int):
+        transformations: list[Transformation] = state.get_prop(
+            consts.CURRENT_TRANSFORMATIONS
+        )
+        new_transformations = self._move_transform(
+            transformations, index, max(index - 1, 0)
+        )
+        state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
+        self.audio_chef_window.update_transformations_to_ui(new_transformations)
+
+    @staticmethod
+    def _move_transform(
+        transformations: list[Transformation], from_index: int, to_index: int
+    ) -> list[Transformation]:
+        new_transformations = transformations[:]
+        transform = new_transformations.pop(from_index)
+        new_transformations.insert(to_index, transform)
+        return new_transformations
+
+    def select_transformation(self, index: int, transform_name: str) -> None:
+        transformations: list[Transformation] = state.get_prop(
+            consts.CURRENT_TRANSFORMATIONS
+        )
+        transform = transformations[index]
+        if transform.name == transform_name:
+            return
+        new_transform = dataclasses.replace(transform, name=transform_name, params={})
+        new_transformations = transformations[:]
+        new_transformations[index] = new_transform
+        state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
+        self.audio_chef_window.update_transformations_to_ui(new_transformations)
+
+    def update_transformation_params(self, index: int, params: dict):
+        transformations: list[Transformation] = state.get_prop(
+            consts.CURRENT_TRANSFORMATIONS
+        )
+        transform = transformations[index]
+        if transform.params == params:
+            return
+        new_transform = dataclasses.replace(transform, params=params)
+        new_transformations = transformations[:]
+        new_transformations[index] = new_transform
+        state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
+        self.audio_chef_window.update_transformations_to_ui(new_transformations)
+
+    def update_name_change_mode(self, new_mode: str):
+        name_change_parameters: NameChangeParameters = state.get_prop(
+            consts.CURRENT_NAME_CHANGE_PARAMS
+        )
+        new_name_change_parameters = dataclasses.replace(
+            name_change_parameters, mode=new_mode
+        )
+        state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
+        self.audio_chef_window.update_name_changer_to_ui(new_name_change_parameters)
+
+    def update_name_change_replace_from_input(self, new_replace_from_input: str):
+        name_change_parameters: NameChangeParameters = state.get_prop(
+            consts.CURRENT_NAME_CHANGE_PARAMS
+        )
+        new_name_change_parameters = dataclasses.replace(
+            name_change_parameters, replace_from_input=new_replace_from_input
+        )
+        state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
+        self.audio_chef_window.update_name_changer_to_ui(new_name_change_parameters)
+
+    def update_name_change_replace_to_input(self, new_replace_to_input: str):
+        name_change_parameters: NameChangeParameters = state.get_prop(
+            consts.CURRENT_NAME_CHANGE_PARAMS
+        )
+        new_name_change_parameters = dataclasses.replace(
+            name_change_parameters, replace_to_input=new_replace_to_input
+        )
+        state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
+        self.audio_chef_window.update_name_changer_to_ui(new_name_change_parameters)
+
+    def update_name_change_wildcards_input(self, new_wildcards_input: str):
+        name_change_parameters: NameChangeParameters = state.get_prop(
+            consts.CURRENT_NAME_CHANGE_PARAMS
+        )
+        new_name_change_parameters = dataclasses.replace(
+            name_change_parameters, wildcards_input=new_wildcards_input
+        )
+        state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
+        self.audio_chef_window.update_name_changer_to_ui(new_name_change_parameters)
 
 
 class CriticalExceptionHandler(kivy.base.ExceptionHandler):

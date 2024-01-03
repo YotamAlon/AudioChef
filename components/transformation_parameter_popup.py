@@ -8,15 +8,15 @@ from components.helper_classes import FloatArgumentBox, FileArgumentBox, Options
 
 
 class TransformationParameterPopup(kivy.uix.popup.Popup):
-    save_callback = kivy.properties.ObjectProperty()
-
     def __init__(
         self,
+        index: int,
         transformation_name: str,
         arguments: typing.List[utils.transformations.Argument],
         **kwargs
     ):
         super().__init__(**kwargs)
+        self.index = index
         for arg in arguments:
             if arg.type is float:
                 self.ids.args_box.add_widget(
@@ -33,5 +33,5 @@ class TransformationParameterPopup(kivy.uix.popup.Popup):
                     OptionsBox(name=arg.name, options=arg.options)
                 )
 
-    def get_argument_dict(self):
+    def get_arguments(self):
         return {arg.name: arg.get_value() for arg in self.ids.args_box.children}

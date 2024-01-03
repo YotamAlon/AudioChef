@@ -28,7 +28,7 @@
                         pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
                         size: [min(self.size)] * 2
                         source: 'assets/icons/plus.png'
-                on_release: root.add_transform_item_click_handler()
+                on_release: app.add_transform_item_click_handler()
         BoxLayout:
             orientation: 'vertical'
             ScrollView:
@@ -52,14 +52,14 @@
                     pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
                     size: [min(self.size)] * 2
                     source: 'assets/icons/up-arrow.png'
-            on_release: root.shift_up()
+            on_release: app.shift_up(root.index)
         Button:
             canvas:
                 Rectangle:
                     pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
                     size: [min(self.size)] * 2
                     source: 'assets/icons/down-arrow.png'
-            on_release: root.shift_down()
+            on_release: app.shift_down(root.index)
 
     Spinner:
         id: spinner
@@ -67,7 +67,7 @@
         size_hint_x: None
         text: 'Choose a tranformation:'
         values: root.transformations
-        on_text: root.select_transformation(self.text)
+        on_text: app.select_transformation(root.index, self.text)
     Button:
         text: "Edit parameters"
         on_release: root.open_parameter_popup()
@@ -79,4 +79,4 @@
         width: 100
         size_hint_x: None
         text: 'remove'
-        on_release: root.remove()
+        on_release: app.remove_transform_item(root.index)

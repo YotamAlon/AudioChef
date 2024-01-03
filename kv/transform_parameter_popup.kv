@@ -17,7 +17,7 @@
             orientation: 'horizontal'
             Button:
                 text: 'Save'
-                on_release: root.save_callback(root.get_argument_dict()); root.dismiss()
+                on_release: app.update_transformation_params(root.index, root.get_arguments()); root.dismiss()
             Button:
                 text: 'Cancel'
                 on_release: root.dismiss()

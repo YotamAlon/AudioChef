@@ -1,4 +1,4 @@
-<NameChangerBox@BoxLayout>:
+<NameChangerBox>:
     orientation: 'vertical'
     BoxLayout:
         orientation: 'horizontal'
@@ -7,6 +7,7 @@
             size_hint_y: None
             height: 85
         SelectableButton:
+            id: lock
             size_hint_y: None
             height: 30
             pos_hint: {'top': 1}
@@ -20,9 +21,7 @@
 
 <NameChanger@BoxLayout>:
     mode: 'replace'
-    wildcards_input_text: wildcards_input.text
-    replace_to_input_text: replace_to_input.text
-    replace_from_input_text: replace_from_input.text
+    on_mode: app.update_name_change_mode(self.mode)
     orientation: 'vertical'
     BoxLayout:
         size_hint_y: None
@@ -63,13 +62,13 @@
                 id: replace_from_input
                 height: 30
                 size_hint_y: None
-                on_text: app.dispatcher.dispatch('on_name_changer_update')
+                on_text: app.update_name_change_replace_from_input(self.text)
             TextInput:
                 id: replace_to_input
                 height: 30
                 size_hint_y: None
                 text: ''
-                on_text: app.dispatcher.dispatch('on_name_changer_update')
+                on_text: app.update_name_change_replace_to_input(self.text)
         BoxLayout:
             orientation: 'vertical'
             Label:
@@ -81,4 +80,4 @@
                 id: wildcards_input
                 height: 30
                 size_hint_y: None
-                on_text: app.dispatcher.dispatch('on_name_changer_update')
+                on_text: app.update_name_change_wildcards_input(self.text)

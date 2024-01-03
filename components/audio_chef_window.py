@@ -4,14 +4,13 @@ from kivy.properties import ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 
-import consts
 from components.extension_box import ExtBox
 from components.helper_classes import PresetButton
 from components.name_changer import NameChangerBox
 from components.transforms_box import TransformsBox
 from consts import CURRENT_PRESET
 from controller import Controller
-from models.preset import Preset, NameChangeParameters, PresetMetadata
+from models.preset import Preset, NameChangeParameters, PresetMetadata, Transformation
 from repository import PresetRepository
 from utils.audio_formats import AudioFile
 from utils.state import state
@@ -29,37 +28,16 @@ class AudioChefWindow(BoxLayout):
         super().__init__(**kwargs)
 
     def on_kv_post(self, base_widget):
-        state.set_reducers(CURRENT_PRESET, self._name_changer_from_preset)
-        state.set_watcher(CURRENT_PRESET, self._load_preset_into_ui)
         self._load_preset_buttons()
-        default_preset = PresetRepository.get_default()
-        if default_preset:
-            preset = default_preset
-        else:
-            preset = Preset(
-                ext="",
-                transformations=[],
-                name_change_parameters=NameChangeParameters(
-                    mode="replace",
-                    wildcards_input="",
-                    replace_from_input="",
-                    replace_to_input="",
-                ),
-            )
 
-        state.set_prop(CURRENT_PRESET, preset)
+    def update_ext_to_ui(self, ext: str) -> None:
+        self.ext_box.load_state(ext)
 
-    @staticmethod
-    def _name_changer_from_preset(preset: Preset) -> tuple[str, NameChangeParameters]:
-        return consts.CURRENT_NAME_CHANGE_PARAMS, preset.name_change_parameters
+    def update_transformations_to_ui(self, transformations: list[Transformation]):
+        self.transforms_box.load_state(transformations)
 
-    def _load_preset_into_ui(self, preset: Preset):
-        self.ext_box.load_from_state(preset.ext)
-
-        self.transforms_box.load_from_state(preset.transformations)
-
-        if not self.name_locked:
-            self.name_changer.load_state(preset.name_change_parameters)
+    def update_name_changer_to_ui(self, name_change_parameters: NameChangeParameters):
+        self.name_changer.load_state(name_change_parameters)
 
     def _load_preset_buttons(self):
         metadata = PresetRepository.get_metadata()

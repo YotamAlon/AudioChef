@@ -1,5 +1,6 @@
-<ExtBox@BoxLayout>:
+<ExtBox>:
     ext_text: ext_input.text
+    on_ext_text: app.update_ext(self.ext_text)
     orientation: 'horizontal'
     OptionsBox:
         id: ext_input

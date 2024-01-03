@@ -8,8 +8,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 
-from consts import CURRENT_PRESET
-from models.preset import Preset
+import consts
+from models.preset import NameChangeParameters
 from utils.audio_formats import (
     AudioFile,
     SUPPORTED_AUDIO_FORMATS,
@@ -28,7 +28,8 @@ class FileList(GridLayout):
 
     def on_kv_post(self, base_widget):
         Window.bind(on_drop_file=self.add_file)
-        state.set_watcher(CURRENT_PRESET, self.update_filenames)
+        state.set_watcher(consts.CURRENT_EXT, self.update_filenames)
+        state.set_watcher(consts.CURRENT_NAME_CHANGE_PARAMS, self.update_filenames)
 
     def add_file(self, window, filename: bytes, x, y):
         filename = filename.decode()
@@ -108,13 +109,14 @@ class FileList(GridLayout):
 
     def get_output_name(self, name):
         path, filename = os.path.split(name)
-        preset: Preset = state.get_prop(CURRENT_PRESET)
-        new_name = preset.name_change_parameters.change_name(filename)
+        name_change_parameters: NameChangeParameters = state.get_prop(
+            consts.CURRENT_NAME_CHANGE_PARAMS
+        )
+        new_name = name_change_parameters.change_name(filename)
         return os.path.join(path, new_name)
 
     def get_output_ext(self, ext):
-        preset: Preset = state.get_prop(CURRENT_PRESET)
-        output_ext = preset.ext
+        output_ext: str = state.get_prop(consts.CURRENT_EXT)
         return "." + (output_ext or ext[1:])
 
 
