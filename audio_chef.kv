@@ -6,6 +6,7 @@
 #:include kv/name_box.kv
 #:include kv/transform_parameter_popup.kv
 #:include kv/error_popup.kv
+#:include kv/plugin_popup.kv
 #:include kv/transforms_box.kv
 
 
@@ -60,6 +61,9 @@
                 Button:
                     text: "Execute Preset"
                     on_release: root.execute_preset()
+                Button:
+                    text: "Add Plugin"
+                    on_release: root.open_plugin_selector()
             BoxLayout:
                 orientation: 'vertical'
                 ExtBox:

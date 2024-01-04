@@ -7,6 +7,7 @@ import kivy.properties  # type: ignore
 import kivy.uix.boxlayout  # type: ignore
 import kivy.uix.button  # type: ignore
 import kivy.uix.dropdown  # type: ignore
+from kivy.uix.popup import Popup
 
 logger = logging.getLogger("audiochef")
 
@@ -139,3 +140,7 @@ class PresetButton(kivy.uix.boxlayout.BoxLayout):
     rename_preset = kivy.properties.ObjectProperty()
     remove_preset = kivy.properties.ObjectProperty()
     make_default = kivy.properties.ObjectProperty()
+
+
+class NoticePopup(Popup):
+    text = kivy.properties.StringProperty()

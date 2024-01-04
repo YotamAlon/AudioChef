@@ -14,9 +14,16 @@ import peewee
 import consts
 from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
+from components.helper_classes import NoticePopup
 from consts import CURRENT_PRESET
 from models.preset import NameChangeParameters, Transformation, Preset
-from repository import PresetModel, db_proxy, PresetRepository
+from repository import (
+    PresetModel,
+    db_proxy,
+    PresetRepository,
+    PluginRepository,
+    PluginModel,
+)
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
 from utils.event_dispatcher import dispatcher
 from utils.state import State, state
@@ -57,7 +64,7 @@ class AudioChefApp(kivy.app.App):
         logger.info("Initializing database ...")
         db = peewee.SqliteDatabase("presets.db")
         db_proxy.initialize(db)
-        db.create_tables([PresetModel])
+        db.create_tables([PresetModel, PluginModel])
 
         logger.debug("Binding dropfile event ...")
         kivy.core.window.Window.clearcolor = app.window_background_color
@@ -306,6 +313,22 @@ class AudioChefApp(kivy.app.App):
         )
         state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
         self.audio_chef_window.update_name_changer_to_ui(new_name_change_parameters)
+
+    @staticmethod
+    def load_plugin(path: str, selection: list[str]) -> bool:
+        if path.lower().endswith(".vst3"):
+            vst3_file = path
+        elif selection and selection[0].lower().endswith(".vst3"):
+            vst3_file = selection[0]
+        else:
+            NoticePopup(
+                title="You have not selected a valid plugin!",
+                text="Please try again - the file/folder must be a valid vst3 plugin",
+            ).open()
+            return False
+
+        PluginRepository().save_plugin(vst3_file)
+        return True
 
 
 class CriticalExceptionHandler(kivy.base.ExceptionHandler):

@@ -2,6 +2,7 @@ import dataclasses
 import json
 import uuid
 
+import pedalboard
 import peewee
 from peewee import DatabaseProxy
 
@@ -111,10 +112,17 @@ class PresetRepository:
         )
 
 
-class Plugin(peewee.Model):
+class PluginModel(peewee.Model):
     name = peewee.CharField(max_length=256)
     path = peewee.CharField(max_length=2048)
     params = JSONField()
 
     class Meta:
-        db = db_proxy
+        database = db_proxy
+
+
+class PluginRepository:
+    @classmethod
+    def save_plugin(cls, path: str) -> None:
+        pedalboard_plugin: pedalboard.VST3Plugin = pedalboard.load_plugin(path)
+        PluginModel.create(name=pedalboard_plugin.name, path=path, params={})

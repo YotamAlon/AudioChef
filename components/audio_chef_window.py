@@ -7,6 +7,7 @@ from kivy.uix.widget import Widget
 from components.extension_box import ExtBox
 from components.helper_classes import PresetButton
 from components.name_changer import NameChangerBox
+from components.plugin_popup import PluginPopup
 from components.transforms_box import TransformsBox
 from consts import CURRENT_PRESET
 from controller import Controller
@@ -81,3 +82,7 @@ class AudioChefWindow(BoxLayout):
             if button.preset_id == preset_id:
                 self.presets_box.remove_widget(button)
                 break
+
+    @staticmethod
+    def open_plugin_selector():
+        PluginPopup().open()
