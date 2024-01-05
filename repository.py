@@ -12,6 +12,7 @@ from models.preset import (
     NameChangeParameters,
     PresetMetadata,
 )
+from utils.transformations import TRANSFORMATIONS
 
 db_proxy = DatabaseProxy()
 
@@ -115,7 +116,7 @@ class PresetRepository:
 class PluginModel(peewee.Model):
     name = peewee.CharField(max_length=256)
     path = peewee.CharField(max_length=2048)
-    params = JSONField()
+    params = JSONField(default={})
 
     class Meta:
         database = db_proxy
@@ -125,4 +126,26 @@ class PluginRepository:
     @classmethod
     def save_plugin(cls, path: str) -> None:
         pedalboard_plugin: pedalboard.VST3Plugin = pedalboard.load_plugin(path)
-        PluginModel.create(name=pedalboard_plugin.name, path=path, params={})
+        plugin: PluginModel = PluginModel.get_or_create(path=path)[0]
+        plugin.name = pedalboard_plugin.name
+        plugin.save()
+
+    @classmethod
+    def get_available_transformations(cls) -> list[Transformation]:
+        static_transformations = TRANSFORMATIONS.keys()
+        transformations = [
+            Transformation(name=transform_name, params={})
+            for transform_name in static_transformations
+        ]
+        plugins = PluginModel.select()
+        transformations.extend(
+            [
+                Transformation(
+                    name=plugin.name,
+                    params={},
+                    show_editor=pedalboard.load_plugin(plugin.path).show_editor,
+                )
+                for plugin in plugins
+            ]
+        )
+        return transformations

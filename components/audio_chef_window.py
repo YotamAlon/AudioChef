@@ -37,6 +37,11 @@ class AudioChefWindow(BoxLayout):
     def update_transformations_to_ui(self, transformations: list[Transformation]):
         self.transforms_box.load_state(transformations)
 
+    def update_available_transformations_to_ui(
+        self, available_transformations: list[Transformation]
+    ):
+        self.transforms_box.load_available_tranformations(available_transformations)
+
     def update_name_changer_to_ui(self, name_change_parameters: NameChangeParameters):
         self.name_changer.load_state(name_change_parameters)
 

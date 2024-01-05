@@ -66,7 +66,7 @@
         width: 200
         size_hint_x: None
         text: 'Choose a tranformation:'
-        values: root.transformations
+        values: [transform.name for transform in root.available_transformations]
         on_text: app.select_transformation(root.index, self.text)
     Button:
         text: "Edit parameters"

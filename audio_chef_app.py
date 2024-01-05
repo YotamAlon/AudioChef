@@ -15,7 +15,6 @@ import consts
 from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
 from components.helper_classes import NoticePopup
-from consts import CURRENT_PRESET
 from models.preset import NameChangeParameters, Transformation, Preset
 from repository import (
     PresetModel,
@@ -106,6 +105,9 @@ class AudioChefApp(kivy.app.App):
         self.audio_chef_window.update_name_changer_to_ui(preset.name_change_parameters)
         state.set_prop(consts.CURRENT_TRANSFORMATIONS, preset.transformations)
         self.audio_chef_window.update_transformations_to_ui(preset.transformations)
+        available_transformations = PluginRepository.get_available_transformations()
+        state.set_prop(consts.AVAILABLE_TRANSFORMATIONS, available_transformations)
+        self.audio_chef_window.update_available_transformations_to_ui(available_transformations)
         # inspector.create_inspector(kivy.core.window.Window, audio_chef_window)
         return self.audio_chef_window
 
@@ -192,12 +194,6 @@ class AudioChefApp(kivy.app.App):
             settings.add_json_panel(
                 transformation_name, self.config, data=json.dumps(arguments_list)
             )
-
-    @staticmethod
-    def update_transformations(new_transformations: list[Transformation]) -> None:
-        preset: Preset = state.get_prop(CURRENT_PRESET)
-        new_preset = dataclasses.replace(preset, transformations=new_transformations)
-        state.set_prop(CURRENT_PRESET, new_preset)
 
     def update_ext(self, new_ext: str) -> None:
         state.set_prop(consts.CURRENT_EXT, new_ext)

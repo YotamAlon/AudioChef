@@ -1,18 +1,18 @@
 import logging
 
+from kivy.properties import ListProperty
 from kivy.uix.boxlayout import BoxLayout
 
-import consts
 from components.transformation_parameter_popup import TransformationParameterPopup
 from models.preset import Transformation
-from utils.state import state
+from utils.functions import find_first
 from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
 
 
 class TransformationForm(BoxLayout):
-    transformations = TRANSFORMATIONS.keys()
+    available_transformations: list[Transformation] = ListProperty()
 
     def __init__(
         self, transform_name: str | None = None, params: dict | None = None, **kwargs
@@ -31,10 +31,10 @@ class TransformationForm(BoxLayout):
 
     def open_parameter_popup(self):
         if self.selected_transformation_name:
-            transformations: list[Transformation] = state.get_prop(
-                consts.CURRENT_TRANSFORMATIONS
+            transform = find_first(
+                self.available_transformations,
+                lambda t: t.name == self.selected_transformation_name,
             )
-            transform = transformations[self.index]
             if transform.show_editor:
                 transform.show_editor()
             else:
