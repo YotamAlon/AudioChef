@@ -10,6 +10,7 @@ import kivy.core.window
 import kivy.metrics
 import kivy.uix.settings
 import peewee
+from kivy.modules import inspector
 
 import consts
 from components.audio_chef_window import AudioChefWindow
@@ -24,7 +25,6 @@ from repository import (
     PluginModel,
 )
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
-from utils.event_dispatcher import dispatcher
 from utils.state import State, state
 from utils.transformations import TRANSFORMATIONS
 
@@ -45,7 +45,6 @@ class AudioChefApp(kivy.app.App):
     state: State = state
     min_width = 1280
     min_height = 720
-    dispatcher = dispatcher
     supported_audio_formats = SUPPORTED_AUDIO_FORMATS
     audio_chef_window: AudioChefWindow
 
@@ -108,7 +107,7 @@ class AudioChefApp(kivy.app.App):
         available_transformations = PluginRepository.get_available_transformations()
         state.set_prop(consts.AVAILABLE_TRANSFORMATIONS, available_transformations)
         self.audio_chef_window.update_available_transformations_to_ui(available_transformations)
-        # inspector.create_inspector(kivy.core.window.Window, audio_chef_window)
+        inspector.create_inspector(kivy.core.window.Window, self.audio_chef_window)
         return self.audio_chef_window
 
     def set_window_maximized_state(self, window):
