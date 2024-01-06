@@ -1,6 +1,5 @@
 import logging
 
-from kivy.properties import StringProperty
 from kivy.uix.boxlayout import BoxLayout
 
 from kivy_helpers import toggle_widget
@@ -10,14 +9,11 @@ logger = logging.getLogger("audiochef")
 
 
 class NameChangerBox(BoxLayout):
-    _wildcards = ["$item", "$date"]
-    mode = StringProperty("replace")
-
     def on_kv_post(self, base_widget):
         self.switch_widgets()
 
     def switch_widgets(self):
-        for widget_name in self.ids.name_changer.ids:
+        for widget_name in ['wildcards_box', 'replace_box']:
             hide = not widget_name.startswith(self.ids.name_changer.mode)
             toggle_widget(self.ids.name_changer.ids[widget_name], hide)
 
@@ -36,3 +32,4 @@ class NameChangerBox(BoxLayout):
         self.ids.name_changer.ids.replace_to_input.text = (
             name_change_parameters.replace_to_input
         )
+        self.switch_widgets()

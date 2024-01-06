@@ -31,14 +31,14 @@
             BoxLayout:
                 orientation: 'horizontal'
                 size_hint_y: None
-                height: 40
+                height: 60
                 Label:
                     text: 'Presets'
                 Button:
                     text: 'Configure app (or press F1)'
                     on_release: app.open_settings()
                     size_hint_x: None
-                    width: 240
+                    width: 450
             BoxLayout:
                 id: presets_box
                 orientation: 'vertical'
@@ -51,7 +51,7 @@
         BoxLayout:
             orientation: 'vertical'
             BoxLayout:
-                height: 40
+                height: 60
                 size_hint_y: None
                 Label:
                     text: 'Current preset'
@@ -69,7 +69,7 @@
                 ExtBox:
                     id: ext_item
                     size_hint_y: None
-                    height: 30
+                    height: 60
                     canvas.before:
                         Color:
                             rgba: 0, 0, 0, 1
@@ -78,7 +78,7 @@
                             rectangle: self.x, self.y, self.width, self.height
                 NameChangerBox:
                     id: name_item
-                    height: 85
+                    height: 150
                     size_hint_y: None
                     canvas.before:
                         Color:

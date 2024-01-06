@@ -5,11 +5,11 @@
         NameChanger:
             id: name_changer
             size_hint_y: None
-            height: 85
+            height: 150
         SelectableButton:
             id: lock
             size_hint_y: None
-            height: 30
+            height: 60
             pos_hint: {'top': 1}
             selected: True
             text: 'Lock'
@@ -24,8 +24,7 @@
     on_mode: app.update_name_change_mode(self.mode)
     orientation: 'vertical'
     BoxLayout:
-        size_hint_y: None
-        height: 30
+        size_hint_y: .4
         orientation: 'horizontal'
         Label:
             text: 'Choose file name change type:'
@@ -46,38 +45,26 @@
             group: 'name_changer'
             on_active: if self.active: root.mode = 'wildcards'
     RelativeLayout:
-        size_hint_y: None
-        height: 55
+        size_hint_y: .6
         GridLayout:
+            id: replace_box
             cols: 2
             Label:
-                height: 25
-                size_hint_y: None
                 text: 'Replace this:'
             Label:
-                height: 25
-                size_hint_y: None
                 text: 'With this:'
             TextInput:
                 id: replace_from_input
-                height: 30
-                size_hint_y: None
                 on_text: app.update_name_change_replace_from_input(self.text)
             TextInput:
                 id: replace_to_input
-                height: 30
-                size_hint_y: None
                 text: ''
                 on_text: app.update_name_change_replace_to_input(self.text)
         BoxLayout:
+            id: wildcards_box
             orientation: 'vertical'
             Label:
-                id: wildcards_label
-                height: 25
-                size_hint_y: None
                 text: 'Output Format:'
             TextInput:
                 id: wildcards_input
-                height: 30
-                size_hint_y: None
                 on_text: app.update_name_change_wildcards_input(self.text)

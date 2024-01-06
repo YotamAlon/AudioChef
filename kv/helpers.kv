@@ -8,16 +8,22 @@
 <PresetButton>:
     size_hint_y: None
     pos_hint: {'top': 1}
-    height: 40
+    height: 60
     TextInput:
         text: root.preset_name
         on_text: root.rename_preset(root.preset_id, self.text)
     Button:
+        width: self.texture_size[0] + 50
+        size_hint_x: None
         text: 'Load'
         on_release: root.load_preset(root.preset_id)
     Label:
+        width: self.texture_size[0] + 20
+        size_hint_x: None
         text: 'Default:'
     CheckBox:
+        width: 70
+        size_hint_x: None
         group: 'default_preset'
         active: root.default
         on_active: if self.active: root.make_default(root.preset_id)
@@ -27,7 +33,7 @@
                 pos: self.pos[0] + ((self.size[0] - min(self.size)) / 2), self.pos[1] + ((self.size[1] - min(self.size)) / 2)
                 size: [min(self.size)] * 2
                 source: 'assets/icons/minus.png'
-        width: 50
+        width: 70
         size_hint_x: None
         on_release: root.remove_preset(root.preset_id)
 
@@ -42,9 +48,10 @@
     Label:
         id: input_label
         text: root.name
-        height: max(25, self.texture_size[1])
-        width: max(200, self.texture_size[0])
+        height: max(25, self.texture_size[1] + 10)
+        width: max(200, self.texture_size[0] + 50)
         size_hint: None, None
+        valign: 'middle'
     TextInput:
         id: text_input
         text: root.text
