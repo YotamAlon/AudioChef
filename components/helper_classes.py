@@ -136,7 +136,6 @@ class PresetButton(kivy.uix.boxlayout.BoxLayout):
     preset_id = kivy.properties.NumericProperty()
     preset_name = kivy.properties.ObjectProperty()
     default = kivy.properties.BooleanProperty()
-    load_preset = kivy.properties.ObjectProperty()
     rename_preset = kivy.properties.ObjectProperty()
     remove_preset = kivy.properties.ObjectProperty()
     make_default = kivy.properties.ObjectProperty()

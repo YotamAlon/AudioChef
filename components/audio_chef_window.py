@@ -4,6 +4,7 @@ from kivy.properties import ObjectProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 
+import consts
 from components.extension_box import ExtBox
 from components.helper_classes import PresetButton
 from components.name_changer import NameChangerBox
@@ -30,6 +31,17 @@ class AudioChefWindow(BoxLayout):
 
     def on_kv_post(self, base_widget):
         self._load_preset_buttons()
+        state.set_watcher(consts.CURRENT_EXT, self.update_ext_to_ui)
+        state.set_watcher(
+            consts.CURRENT_NAME_CHANGE_PARAMS, self.update_name_changer_to_ui
+        )
+        state.set_watcher(
+            consts.CURRENT_TRANSFORMATIONS, self.update_transformations_to_ui
+        )
+        state.set_watcher(
+            consts.AVAILABLE_TRANSFORMATIONS,
+            self.update_available_transformations_to_ui,
+        )
 
     def update_ext_to_ui(self, ext: str) -> None:
         self.ext_box.load_state(ext)
@@ -57,7 +69,6 @@ class AudioChefWindow(BoxLayout):
                 preset_id=preset_metadata.id,
                 preset_name=preset_metadata.name,
                 default=preset_metadata.default,
-                load_preset=self.load_preset,
                 rename_preset=PresetRepository.rename_preset,
                 remove_preset=self.remove_preset,
                 make_default=PresetRepository.make_default,
@@ -74,11 +85,6 @@ class AudioChefWindow(BoxLayout):
         current_preset: Preset = state.get_prop(CURRENT_PRESET)
         preset_metadata = PresetRepository.save_preset(current_preset)
         self._add_preset_button(preset_metadata)
-
-    @staticmethod
-    def load_preset(preset_id: int) -> None:
-        preset = PresetRepository.get_by_id(preset_id)
-        state.set_prop(CURRENT_PRESET, preset)
 
     def remove_preset(self, preset_id: int) -> None:
         PresetRepository.delete(preset_id)
