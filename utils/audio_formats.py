@@ -142,7 +142,15 @@ def load_audio_formats() -> None:
     _ffmpeg_formats: typing.Dict[str, typing.Dict[str, bool]] = {}
 
     for line in lines[lines.index(" --") + 1: -1]:
-        encode_decode, exts, description = line.strip().split(maxsplit=2)
+        if not line:
+            continue
+
+        match line.strip().split(maxsplit=2):
+            case [encode_decode, exts]:
+                description = "N/A"
+            case [encode_decode, exts, description]:
+                pass
+                
         for ext in exts.split(","):
             if ext in _ffmpeg_formats:
                 _ffmpeg_formats[ext]["can_decode"] |= "D" in encode_decode

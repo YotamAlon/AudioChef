@@ -15,6 +15,9 @@ kivy.require('2.0.0')
 if platform == "macosx":  # mac will not write into app folder
     home_dir = os.path.expanduser('~/')
     ffmpeg_path = str(Path(__file__).parent / 'mac/ffmpeg')
+elif platform == "linux":
+    home_dir = app.directory
+    ffmpeg_path = str(Path(__file__).parent / 'linux/ffmpeg')
 else:
     home_dir = app.directory
     ffmpeg_path = str(Path(__file__).parent / 'windows/ffmpeg')
