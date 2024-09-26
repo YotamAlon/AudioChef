@@ -8,9 +8,12 @@ import kivy
 from kivy import platform
 from kivy.resources import resource_add_path
 
-from audio_chef_app import app
+from audio_chef_app import AudioChefApp
+from controller import Controller
 
 kivy.require('2.0.0')
+
+app = AudioChefApp(Controller())
 
 if platform == "macosx":  # mac will not write into app folder
     home_dir = os.path.expanduser('~/')

@@ -1,7 +1,9 @@
+from collections.abc import Callable
 import configparser
 import dataclasses
 import json
 import logging
+from typing import Protocol
 
 import kivy
 import kivy.app
@@ -9,7 +11,6 @@ import kivy.base
 import kivy.core.window
 import kivy.metrics
 import kivy.uix.settings
-import peewee
 from kivy.modules import inspector
 
 import consts
@@ -17,18 +18,20 @@ from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
 from components.helper_classes import NoticePopup
 from models.preset import NameChangeParameters, Transformation, Preset
-from adapters.repository import (
-    PresetModel,
-    db_proxy,
-    PresetRepository,
-    PluginRepository,
-    PluginModel,
-)
+
 from utils.audio_formats import SUPPORTED_AUDIO_FORMATS, load_audio_formats
 from utils.state import State, state
 from utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
+
+
+class ControllerProtocol(Protocol):
+    def get_default_preset(self) -> Preset: ...
+    def get_available_transformations(self) -> list[Transformation]: ...
+    def save_plugin(self, plugin_path: str) -> None: ...
+    def get_preset_by_id(self, preset_id: int) -> Preset: ...
+    def initialize_db(self) -> None: ...
 
 
 class AudioChefApp(kivy.app.App):
@@ -48,9 +51,10 @@ class AudioChefApp(kivy.app.App):
     supported_audio_formats = SUPPORTED_AUDIO_FORMATS
     audio_chef_window: AudioChefWindow
 
-    def __init__(self):
+    def __init__(self, controller: ControllerProtocol):
         logger.setLevel(self.log_level)
         super().__init__()
+        self._controller = controller
 
     def build(self):
         logger.info("Loading KV file ...")
@@ -60,12 +64,10 @@ class AudioChefApp(kivy.app.App):
         load_audio_formats()
 
         logger.info("Initializing database ...")
-        db = peewee.SqliteDatabase("presets.db")
-        db_proxy.initialize(db)
-        db.create_tables([PresetModel, PluginModel])
+        self._controller.initialize_db()
 
         logger.debug("Binding dropfile event ...")
-        kivy.core.window.Window.clearcolor = app.window_background_color
+        kivy.core.window.Window.clearcolor = self.window_background_color
         kivy.core.window.Window.size = (
             self.config.getfloat("Window", "width"),
             self.config.getfloat("Window", "height"),
@@ -84,30 +86,17 @@ class AudioChefApp(kivy.app.App):
         kivy.core.window.Window.bind(on_maximize=self.set_window_maximized_state)
         kivy.core.window.Window.bind(on_restore=self.set_window_restored_state)
         audio_chef_window = AudioChefWindow()
-        default_preset = PresetRepository.get_default()
-        if default_preset:
-            preset = default_preset
-        else:
-            preset = Preset(
-                ext="",
-                transformations=[],
-                name_change_parameters=NameChangeParameters(
-                    mode="replace",
-                    wildcards_input="",
-                    replace_from_input="",
-                    replace_to_input="",
-                ),
-            )
+        preset = self._controller.get_default_preset()
 
         self._load_preset(preset)
 
-        available_transformations = PluginRepository.get_available_transformations()
+        available_transformations = self._controller.get_available_transformations()
         state.set_prop(consts.AVAILABLE_TRANSFORMATIONS, available_transformations)
         inspector.create_inspector(kivy.core.window.Window, audio_chef_window)
         return audio_chef_window
 
     def load_preset(self, preset_id: int) -> None:
-        preset = PresetRepository.get_by_id(preset_id)
+        preset = self._controller.get_preset_by_id(preset_id)
         self._load_preset(preset)
 
     def _load_preset(self, preset: Preset) -> None:
@@ -303,8 +292,7 @@ class AudioChefApp(kivy.app.App):
         )
         state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
 
-    @staticmethod
-    def load_plugin(path: str, selection: list[str]) -> bool:
+    def load_plugin(self, path: str, selection: list[str]) -> bool:
         if path.lower().endswith(".vst3"):
             vst3_file = path
         elif selection and selection[0].lower().endswith(".vst3"):
@@ -316,9 +304,8 @@ class AudioChefApp(kivy.app.App):
             ).open()
             return False
 
-        PluginRepository().save_plugin(vst3_file)
+        self._controller.save_plugin(vst3_file)
         return True
-
 
 class CriticalExceptionHandler(kivy.base.ExceptionHandler):
     def handle_exception(self, inst):
@@ -328,5 +315,3 @@ class CriticalExceptionHandler(kivy.base.ExceptionHandler):
 
 
 kivy.base.ExceptionManager.add_handler(CriticalExceptionHandler())
-
-app = AudioChefApp()
