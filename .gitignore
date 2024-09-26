@@ -130,3 +130,7 @@ dmypy.json
 
 # Pycharm folder
 .idea/
+
+# AudioChef specific files
+audiochef.ini
+presets.db

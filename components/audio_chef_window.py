@@ -1,19 +1,22 @@
 from typing import List
 
-from kivy.properties import ObjectProperty, BooleanProperty
+from kivy.properties import BooleanProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
 import consts
+from adapters.audio_client import AudioClient
+from adapters.repository import PresetRepository
 from components.extension_box import ExtBox
 from components.helper_classes import PresetButton
 from components.name_changer import NameChangerBox
 from components.plugin_popup import PluginPopup
 from components.transforms_box import TransformsBox
 from consts import CURRENT_PRESET
-from controller import Controller
-from models.preset import Preset, NameChangeParameters, PresetMetadata, Transformation
-from repository import PresetRepository
+from models.preset import (NameChangeParameters, Preset, PresetMetadata,
+                           Transformation)
 from utils.audio_formats import AudioFile
 from utils.state import state
 
@@ -79,7 +82,15 @@ class AudioChefWindow(BoxLayout):
     def execute_preset() -> None:
         preset = state.get_prop(CURRENT_PRESET)
         selected_files: List[AudioFile] = state.get_prop("selected_files")
-        Controller.execute_preset(preset.ext, selected_files, preset.transformations)
+        success = AudioClient.execute_preset(preset.ext, selected_files, preset.transformations)
+        if not success:
+            Popup(
+                title="I Encountered an Error!",
+                content=Label(
+                    text="I wrote all the info for the developer in a log file.\n"
+                    "Check the folder with AudioChef it in."
+                ),
+            )
 
     def save_preset(self):
         current_preset: Preset = state.get_prop(CURRENT_PRESET)

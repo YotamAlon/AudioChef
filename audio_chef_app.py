@@ -17,7 +17,7 @@ from components.audio_chef_window import AudioChefWindow
 from components.error_popup import ErrorPopup
 from components.helper_classes import NoticePopup
 from models.preset import NameChangeParameters, Transformation, Preset
-from repository import (
+from adapters.repository import (
     PresetModel,
     db_proxy,
     PresetRepository,
@@ -202,7 +202,7 @@ class AudioChefApp(kivy.app.App):
     def update_ext(self, new_ext: str) -> None:
         state.set_prop(consts.CURRENT_EXT, new_ext)
 
-    def add_transform_item_click_handler(self):
+    def add_transform_item_click_handler(self) -> None:
         transformations: list[Transformation] = state.get_prop(
             consts.CURRENT_TRANSFORMATIONS
         )
@@ -218,14 +218,14 @@ class AudioChefApp(kivy.app.App):
         )
         state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
 
-    def shift_up(self, index: int):
+    def shift_up(self, index: int) -> None:
         transformations: list[Transformation] = state.get_prop(
             consts.CURRENT_TRANSFORMATIONS
         )
         new_transformations = self._move_transform(transformations, index, index + 1)
         state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
 
-    def shift_down(self, index: int):
+    def shift_down(self, index: int) -> None:
         transformations: list[Transformation] = state.get_prop(
             consts.CURRENT_TRANSFORMATIONS
         )
@@ -255,7 +255,7 @@ class AudioChefApp(kivy.app.App):
         new_transformations[index] = new_transform
         state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
 
-    def update_transformation_params(self, index: int, params: dict):
+    def update_transformation_params(self, index: int, params: dict) -> None:
         transformations: list[Transformation] = state.get_prop(
             consts.CURRENT_TRANSFORMATIONS
         )
@@ -267,7 +267,7 @@ class AudioChefApp(kivy.app.App):
         new_transformations[index] = new_transform
         state.set_prop(consts.CURRENT_TRANSFORMATIONS, new_transformations)
 
-    def update_name_change_mode(self, new_mode: str):
+    def update_name_change_mode(self, new_mode: str) -> None:
         name_change_parameters: NameChangeParameters = state.get_prop(
             consts.CURRENT_NAME_CHANGE_PARAMS
         )
@@ -276,7 +276,7 @@ class AudioChefApp(kivy.app.App):
         )
         state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
 
-    def update_name_change_replace_from_input(self, new_replace_from_input: str):
+    def update_name_change_replace_from_input(self, new_replace_from_input: str) -> None:
         name_change_parameters: NameChangeParameters = state.get_prop(
             consts.CURRENT_NAME_CHANGE_PARAMS
         )
@@ -285,7 +285,7 @@ class AudioChefApp(kivy.app.App):
         )
         state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
 
-    def update_name_change_replace_to_input(self, new_replace_to_input: str):
+    def update_name_change_replace_to_input(self, new_replace_to_input: str) -> None:
         name_change_parameters: NameChangeParameters = state.get_prop(
             consts.CURRENT_NAME_CHANGE_PARAMS
         )
@@ -294,7 +294,7 @@ class AudioChefApp(kivy.app.App):
         )
         state.set_prop(consts.CURRENT_NAME_CHANGE_PARAMS, new_name_change_parameters)
 
-    def update_name_change_wildcards_input(self, new_wildcards_input: str):
+    def update_name_change_wildcards_input(self, new_wildcards_input: str) -> None:
         name_change_parameters: NameChangeParameters = state.get_prop(
             consts.CURRENT_NAME_CHANGE_PARAMS
         )

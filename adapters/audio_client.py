@@ -3,8 +3,6 @@ import os
 import typing
 
 import pedalboard
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 
 from components.helper_classes import UnexecutableRecipeError
 from models.preset import Transformation
@@ -14,14 +12,14 @@ from utils.transformations import TRANSFORMATIONS
 logger = logging.getLogger("audiochef")
 
 
-class Controller:
+class AudioClient:
     @classmethod
     def execute_preset(
         cls,
         output_ext: str,
         selected_files: list[AudioFile],
         transformations: list[Transformation],
-    ) -> None:
+    ) -> bool:
         try:
             cls.check_input_file_formats(selected_files=selected_files)
             cls.check_output_file_formats(output_ext)
@@ -36,13 +34,8 @@ class Controller:
                 audio_file.write_output_file(res, sample_rate)
         except UnexecutableRecipeError as e:
             logger.error(repr(e))
-            Popup(
-                title="I Encountered an Error!",
-                content=Label(
-                    text="I wrote all the info for the developer in a log file.\n"
-                    "Check the folder with AudioChef it in."
-                ),
-            )
+            return False
+        return True
 
     @staticmethod
     def check_input_file_formats(selected_files: list[AudioFile]) -> None:
