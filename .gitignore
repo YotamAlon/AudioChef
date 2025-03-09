@@ -134,3 +134,4 @@ dmypy.json
 # AudioChef specific files
 audiochef.ini
 presets.db
+.ffmpeg/
