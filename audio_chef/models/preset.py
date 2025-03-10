@@ -7,7 +7,7 @@ from datetime import datetime
 class Transformation:
     name: str | None
     params: dict
-    show_editor: typing.Callable[[], None] | None = None
+    show_editor: typing.Callable[[dict], dict] | None = None
 
 
 @dataclasses.dataclass(frozen=True)

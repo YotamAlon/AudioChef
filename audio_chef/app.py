@@ -302,7 +302,9 @@ class AudioChefApp(kivy.app.App):
             return False
 
         self._controller.save_plugin(vst3_file)
+        state.set_prop(consts.AVAILABLE_TRANSFORMATIONS, self._controller.get_available_transformations())
         return True
+
 
 class CriticalExceptionHandler(kivy.base.ExceptionHandler):
     def handle_exception(self, inst):

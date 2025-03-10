@@ -1,6 +1,7 @@
 import dataclasses
 import json
 import uuid
+from collections.abc import Callable
 
 import pedalboard
 import peewee
@@ -126,9 +127,7 @@ class PluginRepository:
     @classmethod
     def save_plugin(cls, path: str) -> None:
         pedalboard_plugin: pedalboard.VST3Plugin = pedalboard.load_plugin(path)
-        plugin: PluginModel = PluginModel.get_or_create(path=path)[0]
-        plugin.name = pedalboard_plugin.name
-        plugin.save()
+        PluginModel.get_or_create(name=pedalboard_plugin.name, path=path)
 
     @classmethod
     def get_available_transformations(cls) -> list[Transformation]:
@@ -143,9 +142,18 @@ class PluginRepository:
                 Transformation(
                     name=plugin.name,
                     params={},
-                    show_editor=pedalboard.load_plugin(plugin.path).show_editor,
+                    show_editor=cls._get_show_editor_func(plugin),
                 )
                 for plugin in plugins
             ]
         )
-        return transformations
+        return sorted(transformations, key=lambda t: t.name)
+
+    @staticmethod
+    def _get_show_editor_func(plugin_model: PluginModel) -> Callable[[dict], dict]:
+        def show_editor(params: dict) -> dict:
+            plugin = pedalboard.load_plugin(plugin_model.path, parameter_values=params)
+            plugin.show_editor()
+            return {param.python_name: getattr(plugin, param.python_name) for param in plugin.parameters.values()}
+
+        return show_editor

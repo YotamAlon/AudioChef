@@ -1,6 +1,7 @@
 import logging
+from collections.abc import Callable
 
-from kivy.properties import ListProperty
+from kivy.properties import ListProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 
 from audio_chef.components.transformation_parameter_popup import TransformationParameterPopup
@@ -13,6 +14,7 @@ logger = logging.getLogger("audiochef")
 
 class TransformationForm(BoxLayout):
     available_transformations: list[Transformation] = ListProperty()
+    update_func: Callable[[int, dict], None] = ObjectProperty()
 
     def __init__(
         self, transform_name: str | None = None, params: dict | None = None, **kwargs
@@ -36,12 +38,14 @@ class TransformationForm(BoxLayout):
                 lambda t: t.name == self.selected_transformation_name,
             )
             if transform.show_editor:
-                transform.show_editor()
+                self.arg_values = transform.show_editor(self.arg_values)
+                self.update_func(self.index, self.arg_values)
             else:
                 TransformationParameterPopup(
                     self.index,
                     self.selected_transformation_name,
                     TRANSFORMATIONS[self.selected_transformation_name].arguments,
+                    self.arg_values,
                     title=f"Edit {self.selected_transformation_name} parameters",
                 ).open()
         else:

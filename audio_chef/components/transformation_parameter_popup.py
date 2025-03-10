@@ -12,6 +12,7 @@ class TransformationParameterPopup(kivy.uix.popup.Popup):
         index: int,
         transformation_name: str,
         arguments: typing.List[Argument],
+        params: dict,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -22,14 +23,14 @@ class TransformationParameterPopup(kivy.uix.popup.Popup):
                     FloatArgumentBox(
                         transformation_name=transformation_name,
                         name=arg.name,
-                        initial=str(arg.default),
+                        initial=str(params.get(arg.name, arg.default)),
                     )
                 )
             elif arg.type is str:
                 self.ids.args_box.add_widget(FileArgumentBox(name=arg.name))
             else:
                 self.ids.args_box.add_widget(
-                    OptionsBox(name=arg.name, options=arg.options)
+                    OptionsBox(name=arg.name, options=arg.options, initial=params.get(arg.name, ''))
                 )
 
     def get_arguments(self):
