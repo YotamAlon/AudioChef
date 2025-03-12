@@ -18,6 +18,7 @@ from audio_chef.utils.audio_formats import (
 from audio_chef.utils.state import state
 
 logger = logging.getLogger("audiochef")
+SELECTED_FILES = "selected_files"
 
 
 class FileList(GridLayout):
@@ -48,14 +49,14 @@ class FileList(GridLayout):
                 size_hint=(0.5, 0.5),
             ).open()
             return
-        selected_files = state.get_prop("selected_files")
+        selected_files = state.get_prop(SELECTED_FILES)
 
         if audio_file not in selected_files:
             audio_file.update_destination_name_and_ext(
                 self.get_output_filename(audio_file.filename)
             )
             selected_files.append(audio_file)
-            state.set_prop("selected_files", selected_files)
+            state.set_prop(SELECTED_FILES, selected_files)
 
             file_label = FileLabel(text=audio_file.filename)
             self.add_widget(file_label)
@@ -79,21 +80,21 @@ class FileList(GridLayout):
             )
 
     def remove_file(self, file: AudioFile):
-        selected_files = state.get_prop("selected_files")
+        selected_files = state.get_prop(SELECTED_FILES)
 
         for widget in self.file_widget_map[file.filename]:
             self.remove_widget(widget)
         del self.file_widget_map[file.filename]
         selected_files.remove(file)
 
-        state.set_prop("selected_files", selected_files)
+        state.set_prop(SELECTED_FILES, selected_files)
 
     def clear_files(self, *args, **kwargs):
-        for file in state.get_prop("selected_files")[:]:
+        for file in state.get_prop(SELECTED_FILES)[:]:
             self.remove_file(file)
 
     def update_filenames(self, *args, **kwargs):
-        selected_files: List[AudioFile] = state.get_prop("selected_files")
+        selected_files: List[AudioFile] = state.get_prop(SELECTED_FILES)
         for audio_file in selected_files:
             new_filename = self.get_output_filename(audio_file.filename)
             audio_file.update_destination_name_and_ext(new_filename)
