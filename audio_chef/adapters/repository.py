@@ -154,6 +154,6 @@ class PluginRepository:
         def show_editor(params: dict) -> dict:
             plugin = pedalboard.load_plugin(plugin_model.path, parameter_values=params)
             plugin.show_editor()
-            return {param.python_name: getattr(plugin, param.python_name) for param in plugin.parameters.values()}
+            return {param.python_name: param.type(getattr(plugin, param.python_name)) for param in plugin.parameters.values()}
 
         return show_editor

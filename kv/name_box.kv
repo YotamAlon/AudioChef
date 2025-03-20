@@ -17,6 +17,7 @@
                 self.selected = not self.selected
                 root.locked = not self.selected
                 self.text = 'Lock' if self.selected else 'Unlock'
+                app.lock_name_changer(self.selected)
 
 
 <NameChanger@BoxLayout>:

@@ -1,24 +1,19 @@
-from typing import List
-
 from kivy.properties import BooleanProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
-from audio_chef import consts
-from audio_chef.adapters.audio_client import AudioClient
 from audio_chef.adapters.repository import PresetRepository
+from audio_chef.components import FileList
 from audio_chef.components.extension_box import ExtBox
 from audio_chef.components.helper_classes import PresetButton
 from audio_chef.components.name_changer import NameChangerBox
-from audio_chef.components.plugin_popup import PluginPopup
 from audio_chef.components.transforms_box import TransformsBox
-from audio_chef.consts import CURRENT_PRESET
-from audio_chef.models.preset import (NameChangeParameters, Preset, PresetMetadata,
-                                      Transformation)
+from audio_chef.models.preset import (
+    NameChangeParameters,
+    PresetMetadata,
+    Transformation,
+)
 from audio_chef.utils.audio_formats import AudioFile
-from audio_chef.utils.state import state
 
 
 class AudioChefWindow(BoxLayout):
@@ -27,6 +22,7 @@ class AudioChefWindow(BoxLayout):
     ext_box: ExtBox = ObjectProperty()
     transforms_box: TransformsBox = ObjectProperty()
     presets_box: Widget = ObjectProperty()
+    file_list: FileList = ObjectProperty()
 
     def __init__(self, **kwargs):
         self.selected_transformations = []
@@ -34,20 +30,10 @@ class AudioChefWindow(BoxLayout):
 
     def on_kv_post(self, base_widget):
         self._load_preset_buttons()
-        state.set_watcher(consts.CURRENT_EXT, self.update_ext_to_ui)
-        state.set_watcher(
-            consts.CURRENT_NAME_CHANGE_PARAMS, self.update_name_changer_to_ui
-        )
-        state.set_watcher(
-            consts.CURRENT_TRANSFORMATIONS, self.update_transformations_to_ui
-        )
-        state.set_watcher(
-            consts.AVAILABLE_TRANSFORMATIONS,
-            self.update_available_transformations_to_ui,
-        )
 
     def update_ext_to_ui(self, ext: str) -> None:
         self.ext_box.load_state(ext)
+        self.file_list.ext = ext
 
     def update_transformations_to_ui(self, transformations: list[Transformation]):
         self.transforms_box.load_state(transformations)
@@ -59,14 +45,15 @@ class AudioChefWindow(BoxLayout):
 
     def update_name_changer_to_ui(self, name_change_parameters: NameChangeParameters):
         self.name_changer.load_state(name_change_parameters)
+        self.file_list.name_change_parameters = name_change_parameters
 
     def _load_preset_buttons(self):
         metadata = PresetRepository.get_metadata()
         self.presets_box.clear_widgets()
         for preset_metadata in metadata:
-            self._add_preset_button(preset_metadata)
+            self.add_preset_button(preset_metadata)
 
-    def _add_preset_button(self, preset_metadata: PresetMetadata) -> None:
+    def add_preset_button(self, preset_metadata: PresetMetadata) -> None:
         self.presets_box.add_widget(
             PresetButton(
                 preset_id=preset_metadata.id,
@@ -78,29 +65,6 @@ class AudioChefWindow(BoxLayout):
             )
         )
 
-    @staticmethod
-    def execute_preset() -> None:
-        preset = state.get_prop(CURRENT_PRESET)
-        if not preset:
-            return
-
-        selected_files: List[AudioFile] = state.get_prop("selected_files")
-        success = AudioClient.execute_preset(preset.ext, selected_files, preset.transformations)
-        if not success:
-            Popup(
-                title="I Encountered an Error!",
-                content=Label(
-                    text="I wrote all the info for the developer in a log file.\n"
-                    "Check the folder with AudioChef it in."
-                ),
-            )
-
-    def save_preset(self):
-        current_preset: Preset = state.get_prop(CURRENT_PRESET)
-        if current_preset:
-            preset_metadata = PresetRepository.save_preset(current_preset)
-            self._add_preset_button(preset_metadata)
-
     def remove_preset(self, preset_id: int) -> None:
         PresetRepository.delete(preset_id)
         preset_buttons: list[PresetButton] = self.presets_box.children[:]
@@ -109,6 +73,5 @@ class AudioChefWindow(BoxLayout):
                 self.presets_box.remove_widget(button)
                 break
 
-    @staticmethod
-    def open_plugin_selector():
-        PluginPopup().open()
+    def update_files_to_ui(self, selected_files: list[AudioFile]):
+        self.file_list.update_files(selected_files)

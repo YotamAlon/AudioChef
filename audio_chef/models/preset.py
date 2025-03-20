@@ -1,4 +1,5 @@
 import dataclasses
+import enum
 import typing
 from datetime import datetime
 
@@ -10,15 +11,20 @@ class Transformation:
     show_editor: typing.Callable[[dict], dict] | None = None
 
 
+class NameChangeMode(enum.StrEnum):
+    WILDCARDS = "wildcards"
+    REPLACE = "replace"
+
+
 @dataclasses.dataclass(frozen=True)
 class NameChangeParameters:
-    mode: str
+    mode: NameChangeMode
     wildcards_input: str
     replace_from_input: str
     replace_to_input: str
 
     def change_name(self, old_name: str) -> str:
-        if self.mode == "wildcards":
+        if self.mode == NameChangeMode.WILDCARDS:
             new_name = self.wildcards_input
             new_name = new_name.replace("$item", old_name)
             new_name = new_name.replace("$date", str(datetime.today()))

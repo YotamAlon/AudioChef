@@ -2,61 +2,33 @@ import logging
 import os
 from typing import List
 
-from kivy.core.window import Window
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 
-from audio_chef import consts
-from audio_chef.models.preset import NameChangeParameters
+from audio_chef.models.preset import NameChangeParameters, NameChangeMode
 from audio_chef.utils.audio_formats import (
     AudioFile,
     SUPPORTED_AUDIO_FORMATS,
-    NoCompatibleAudioFormatException,
 )
-from audio_chef.utils.state import state
 
 logger = logging.getLogger("audiochef")
-SELECTED_FILES = "selected_files"
 
 
 class FileList(GridLayout):
     def __init__(self, **kwargs):
-        state.set_prop("selected_files", [])
+        self.selected_files: list[AudioFile] = []
+        self.ext = ""
+        self.name_change_parameters = NameChangeParameters(mode=NameChangeMode.REPLACE, wildcards_input="", replace_from_input="", replace_to_input="")
         self.file_widget_map = {}
         super().__init__(**kwargs)
 
-    def on_kv_post(self, base_widget):
-        Window.bind(on_drop_file=self.add_file)
-        state.set_watcher(consts.CURRENT_EXT, self.update_filenames)
-        state.set_watcher(consts.CURRENT_NAME_CHANGE_PARAMS, self.update_filenames)
-
-    def add_file(self, window, filename: bytes, x, y):
-        filename = filename.decode()
-        try:
-            audio_file = AudioFile(filename)
-        except NoCompatibleAudioFormatException:
-            logger.error(f"Unable to find audio format for {filename}")
-            Popup(
-                title="Unsupported file format!",
-                content=Label(
-                    text=f"The file '{filename}' you just tried to add\n"
-                    f"is encoded in an audio format which is not currently suported.\n"
-                    f"If you think this is a mistake, please send me your audio_chef.log\n"
-                    f"file along with this audio file."
-                ),
-                size_hint=(0.5, 0.5),
-            ).open()
-            return
-        selected_files = state.get_prop(SELECTED_FILES)
-
-        if audio_file not in selected_files:
+    def add_file(self, audio_file: AudioFile):
+        if audio_file not in self.selected_files:
             audio_file.update_destination_name_and_ext(
                 self.get_output_filename(audio_file.filename)
             )
-            selected_files.append(audio_file)
-            state.set_prop(SELECTED_FILES, selected_files)
+            self.selected_files.append(audio_file)
 
             file_label = FileLabel(text=audio_file.filename)
             self.add_widget(file_label)
@@ -80,22 +52,22 @@ class FileList(GridLayout):
             )
 
     def remove_file(self, file: AudioFile):
-        selected_files = state.get_prop(SELECTED_FILES)
-
         for widget in self.file_widget_map[file.filename]:
             self.remove_widget(widget)
         del self.file_widget_map[file.filename]
-        selected_files.remove(file)
+        self.selected_files.remove(file)
 
-        state.set_prop(SELECTED_FILES, selected_files)
+    def update_files(self, files: List[AudioFile]):
+        self.clear_files()
+        for file in files:
+            self.add_file(file)
 
     def clear_files(self, *args, **kwargs):
-        for file in state.get_prop(SELECTED_FILES)[:]:
+        for file in self.selected_files[:]:
             self.remove_file(file)
 
     def update_filenames(self, *args, **kwargs):
-        selected_files: List[AudioFile] = state.get_prop(SELECTED_FILES)
-        for audio_file in selected_files:
+        for audio_file in self.selected_files:
             new_filename = self.get_output_filename(audio_file.filename)
             audio_file.update_destination_name_and_ext(new_filename)
             self.file_widget_map[audio_file.filename][1].text = new_filename
@@ -110,15 +82,11 @@ class FileList(GridLayout):
 
     def get_output_name(self, name):
         path, filename = os.path.split(name)
-        name_change_parameters: NameChangeParameters = state.get_prop(
-            consts.CURRENT_NAME_CHANGE_PARAMS
-        )
-        new_name = name_change_parameters.change_name(filename)
+        new_name = self.name_change_parameters.change_name(filename)
         return os.path.join(path, new_name)
 
     def get_output_ext(self, ext):
-        output_ext: str = state.get_prop(consts.CURRENT_EXT)
-        return "." + (output_ext or ext[1:])
+        return "." + (self.ext or ext[1:])
 
 
 class FileLabel(Label):

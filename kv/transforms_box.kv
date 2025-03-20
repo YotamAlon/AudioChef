@@ -14,6 +14,7 @@
                 self.selected = not self.selected
                 root.locked = not self.selected
                 self.text = 'Lock' if self.selected else 'Unlock'
+                app.lock_transformations(self.selected)
     BoxLayout:
         orientation: 'vertical'
         pos_hint: {'top': 1}

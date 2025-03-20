@@ -23,6 +23,7 @@
     ext_box: ext_item
     transforms_box: transforms_item
     presets_box: presets_box
+    file_list: file_item.file_list
     BoxLayout:
         orientation: 'horizontal'
         BoxLayout:
@@ -57,13 +58,13 @@
                     text: 'Current preset'
                 Button:
                     text: 'Save Preset'
-                    on_release: root.save_preset()
+                    on_release: app.save_preset()
                 Button:
                     text: "Execute Preset"
-                    on_release: root.execute_preset()
+                    on_release: app.execute_preset()
                 Button:
                     text: "Add Plugin"
-                    on_release: root.open_plugin_selector()
+                    on_release: app.open_plugin_selector()
             BoxLayout:
                 orientation: 'vertical'
                 ExtBox:

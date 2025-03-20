@@ -1,4 +1,5 @@
 <FilesBox@BoxLayout>:
+    file_list: file_list
     orientation: 'vertical'
     Label:
         text: 'Added files'
@@ -16,7 +17,7 @@
             text: 'Clear all files'
             width: 150
             size_hint_x: None
-            on_release: file_list.clear_files()
+            on_release: app.clear_files()
     ScrollView:
         FileList:
             id: file_list

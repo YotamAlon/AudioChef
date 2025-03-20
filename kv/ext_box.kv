@@ -16,3 +16,4 @@
         on_release:
             self.selected = not self.selected
             self.text = 'Lock' if self.selected else 'Unlock'
+            app.lock_ext(self.selected)
