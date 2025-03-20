@@ -11,7 +11,6 @@ from kivy.resources import resource_add_path
 
 from audio_chef.app import AudioChefApp
 from audio_chef.consts import FFMPEG_PATH, PROJECT_ROOT
-from audio_chef.controller import Controller
 
 kivy.require("2.0.0")
 
@@ -75,7 +74,7 @@ logger.info(
 os.chdir(home_dir)
 resource_add_path(project_dir.as_posix())
 
-app = AudioChefApp(Controller())
+app = AudioChefApp()
 app.ffmpeg_path = FFMPEG_PATH
 
 

@@ -11,11 +11,17 @@ from audio_chef.models.preset import (
     Preset,
     Transformation,
     NameChangeParameters,
-    PresetMetadata,
+    PresetMetadata, NameChangeMode,
 )
 from audio_chef.utils.transformations import TRANSFORMATIONS
 
 db_proxy = DatabaseProxy()
+
+
+def initialize_db(db_name: str) -> None:
+    db = peewee.SqliteDatabase(db_name)
+    db_proxy.initialize(db)
+    db.create_tables([PresetModel, PluginModel])
 
 
 class JSONField(peewee.TextField):
@@ -106,7 +112,7 @@ class PresetRepository:
                 for transformation in model.transformations
             ],
             name_change_parameters=NameChangeParameters(
-                mode=model.name_changer["mode"],
+                mode=NameChangeMode(model.name_changer["mode"]),
                 wildcards_input=model.name_changer["wildcards_input"],
                 replace_from_input=model.name_changer["replace_from_input"],
                 replace_to_input=model.name_changer["replace_to_input"],

@@ -3,7 +3,6 @@ import dataclasses
 import json
 import logging
 import pathlib
-from typing import Protocol
 
 import kivy
 import kivy.app
@@ -16,36 +15,41 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 
 from audio_chef.adapters.audio_client import AudioClient
-from audio_chef.adapters.repository import PresetRepository
+from audio_chef.adapters.repository import (
+    PresetRepository,
+    PluginRepository,
+    initialize_db,
+)
 from audio_chef.components.audio_chef_window import AudioChefWindow
 from audio_chef.components.error_popup import ErrorPopup
 from audio_chef.components.helper_classes import NoticePopup
 from audio_chef.components.plugin_popup import PluginPopup
-from audio_chef.models.preset import NameChangeParameters, Transformation, Preset, NameChangeMode
+from audio_chef.models.preset import (
+    NameChangeParameters,
+    Transformation,
+    Preset,
+    NameChangeMode,
+)
 
 from audio_chef.utils.audio_formats import (
     SUPPORTED_AUDIO_FORMATS,
     load_audio_formats,
-    AudioFile, NoCompatibleAudioFormatException,
+    AudioFile,
+    NoCompatibleAudioFormatException,
 )
 from audio_chef.utils.transformations import TRANSFORMATIONS
 
 logger = logging.getLogger("audiochef")
 
 
-class ControllerProtocol(Protocol):
-    def get_default_preset(self) -> Preset: ...
-    def get_available_transformations(self) -> list[Transformation]: ...
-    def save_plugin(self, plugin_path: str) -> None: ...
-    def get_preset_by_id(self, preset_id: int) -> Preset: ...
-    def initialize_db(self) -> None: ...
-
-
 class AppState:
     ext: str = ""
     ext_locked: bool = False
     name_change_params: NameChangeParameters = NameChangeParameters(
-        mode="replace", wildcards_input="", replace_from_input="", replace_to_input=""
+        mode=NameChangeMode.REPLACE,
+        wildcards_input="",
+        replace_from_input="",
+        replace_to_input="",
     )
     name_change_locked: bool = False
     transformations: list[Transformation] = []
@@ -71,10 +75,9 @@ class AudioChefApp(kivy.app.App):
     audio_chef_window: AudioChefWindow
     ffmpeg_path: pathlib.Path = pathlib.Path(__file__).parent
 
-    def __init__(self, controller: ControllerProtocol):
+    def __init__(self):
         logger.setLevel(self.log_level)
         super().__init__()
-        self._controller = controller
 
     def on_kv_post(self, base_widget):
         kivy.core.window.Window.bind(on_drop_file=self.add_file)
@@ -109,7 +112,7 @@ class AudioChefApp(kivy.app.App):
         load_audio_formats(self.ffmpeg_path)
 
         logger.info("Initializing database ...")
-        self._controller.initialize_db()
+        initialize_db("presets.db")
 
         logger.debug("Binding dropfile event ...")
         kivy.core.window.Window.clearcolor = self.window_background_color
@@ -131,19 +134,45 @@ class AudioChefApp(kivy.app.App):
         kivy.core.window.Window.bind(on_maximize=self.set_window_maximized_state)
         kivy.core.window.Window.bind(on_restore=self.set_window_restored_state)
         self.audio_chef_window = AudioChefWindow()
-        preset = self._controller.get_default_preset()
+        preset = self._get_default_preset()
 
         self._load_preset(preset)
 
-        AppState.available_transformations = (
-            self._controller.get_available_transformations()
+        AppState.available_transformations = self._get_available_transformations()
+        self.audio_chef_window.update_available_transformations_to_ui(
+            AppState.available_transformations
         )
-        self.audio_chef_window.update_available_transformations_to_ui(AppState.available_transformations)
         inspector.create_inspector(kivy.core.window.Window, self.audio_chef_window)
         return self.audio_chef_window
 
+    def _get_default_preset(self) -> Preset:
+        default_preset = PresetRepository.get_default()
+        if default_preset:
+            preset = default_preset
+        else:
+            preset = Preset(
+                ext="",
+                transformations=[],
+                name_change_parameters=NameChangeParameters(
+                    mode=NameChangeMode.REPLACE,
+                    wildcards_input="",
+                    replace_from_input="",
+                    replace_to_input="",
+                ),
+            )
+        return preset
+
+    def _get_available_transformations(self) -> list[Transformation]:
+        return PluginRepository.get_available_transformations()
+
+    def _save_plugin(self, plugin_path: str) -> None:
+        PluginRepository.save_plugin(plugin_path)
+
+    def _get_preset_by_id(self, preset_id: int) -> Preset:
+        return PresetRepository.get_by_id(preset_id)
+
     def load_preset(self, preset_id: int) -> None:
-        preset = self._controller.get_preset_by_id(preset_id)
+        preset = self._get_preset_by_id(preset_id)
         self._load_preset(preset)
 
     @staticmethod
@@ -381,11 +410,11 @@ class AudioChefApp(kivy.app.App):
             ).open()
             return False
 
-        self._controller.save_plugin(vst3_file)
-        AppState.available_transformations = (
-            self._controller.get_available_transformations()
+        self._save_plugin(vst3_file)
+        AppState.available_transformations = self._get_available_transformations()
+        self.audio_chef_window.update_available_transformations_to_ui(
+            AppState.available_transformations
         )
-        self.audio_chef_window.update_available_transformations_to_ui(AppState.available_transformations)
         return True
 
 
