@@ -24,6 +24,7 @@ from audio_chef.components.audio_chef_window import AudioChefWindow
 from audio_chef.components.error_popup import ErrorPopup
 from audio_chef.components.helper_classes import NoticePopup
 from audio_chef.components.plugin_popup import PluginPopup
+from audio_chef.consts import FFMPEG_PATH
 from audio_chef.models.preset import (
     NameChangeParameters,
     Transformation,
@@ -73,7 +74,7 @@ class AudioChefApp(kivy.app.App):
     min_height = 720
     supported_audio_formats = SUPPORTED_AUDIO_FORMATS
     audio_chef_window: AudioChefWindow
-    ffmpeg_path: pathlib.Path = pathlib.Path(__file__).parent
+    ffmpeg_path: pathlib.Path = FFMPEG_PATH
 
     def __init__(self):
         logger.setLevel(self.log_level)

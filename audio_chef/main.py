@@ -75,8 +75,6 @@ os.chdir(home_dir)
 resource_add_path(project_dir.as_posix())
 
 app = AudioChefApp()
-app.ffmpeg_path = FFMPEG_PATH
-
 
 if hasattr(sys, "_MEIPASS"):
     meipass = sys._MEIPASS
