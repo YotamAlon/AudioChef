@@ -79,8 +79,6 @@ class AudioChefApp(kivy.app.App):
         logger.setLevel(self.log_level)
         super().__init__()
 
-    def on_kv_post(self, base_widget):
-        kivy.core.window.Window.bind(on_drop_file=self.add_file)
 
     def add_file(self, window, filename: bytes, x, y):
         filename = filename.decode()
@@ -133,6 +131,7 @@ class AudioChefApp(kivy.app.App):
         kivy.core.window.Window.bind(on_request_close=self.window_request_close)
         kivy.core.window.Window.bind(on_maximize=self.set_window_maximized_state)
         kivy.core.window.Window.bind(on_restore=self.set_window_restored_state)
+        kivy.core.window.Window.bind(on_drop_file=self.add_file)
         self.audio_chef_window = AudioChefWindow()
         preset = self._get_default_preset()
 
